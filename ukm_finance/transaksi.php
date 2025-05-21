@@ -35,8 +35,17 @@ foreach($ukms as $ukm) {
 }
 ?>
 
-<section class="transaksi-page">
-    <h1>Manajemen Transaksi <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
+<div class="wrapper">
+    <?php include('inc/sidebar.php'); ?>
+    
+    <div id="main-content">
+        <div class="content-toggle">
+            <button id="content-toggle-btn">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+        <section class="transaksi-page">
+            <h1>Manajemen Transaksi <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
     
     <?php if($ukm_id): ?>
         <div class="ukm-selector">
@@ -235,8 +244,9 @@ foreach($ukms as $ukm) {
     <?php else: ?>
         <div class="no-ukm">
             <p>Tidak ada UKM yang tersedia. Silakan hubungi administrator.</p>
-        </div>
-    <?php endif; ?>
-</section>
+        </div>            <?php endif; ?>
+        </section>
+    </div>
+</div>
 
-<?php include('inc/footer.php'); ?> 
+<?php include('inc/footer.php'); ?>

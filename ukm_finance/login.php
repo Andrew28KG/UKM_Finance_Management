@@ -26,19 +26,25 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error = "Email dan password harus diisi";
     } else {
         $finance = new Finance();
-        $user = $finance->userLogin($email, $password);
         
-        if($user) {
-            // Set session variables
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['nama'];
-            $_SESSION['user_email'] = $user['email'];
-            $_SESSION['ukm_id'] = $user['ukm_id'];
+        try {
+            $user = $finance->userLogin($email, $password);
             
-            header("Location: index.php");
-            exit();
-        } else {
-            $error = "Email atau password salah";
+            if($user) {
+                // Set session variables
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['user_name'] = $user['nama'];
+                $_SESSION['user_email'] = $user['email'];
+                $_SESSION['ukm_id'] = $user['ukm_id'];
+                
+                header("Location: index.php");
+                exit();
+            } else {
+                $error = "Email atau password salah. Pastikan email dan password yang dimasukkan benar.";
+            }
+        } catch (Exception $e) {
+            $error = "Terjadi kesalahan saat login: " . $e->getMessage();
+            error_log("Login error: " . $e->getMessage());
         }
     }
 }
@@ -75,6 +81,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         <div class="login-footer">
             <p>Belum memiliki akun? Hubungi administrator UKM.</p>
+            <p><small style="color: #666;">Test credentials: admin@example.com / password123</small></p>
         </div>
     </div>
 </section>
