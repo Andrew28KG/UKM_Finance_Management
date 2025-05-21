@@ -2,17 +2,20 @@
 session_start();
 header("Access-Control-Allow-Origin: *");
 include('inc/header.php');
+include('inc/auth.php');
 include('class/finance.php');
 
-// Check if user is logged in
-if(!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
+// Check if user is authenticated (either logged in or in preview mode)
+requireAuth();
 
 $finance = new Finance();
 $ukms = $finance->getUkm();
 $ukm_id = isset($_GET['ukm_id']) ? $_GET['ukm_id'] : (isset($_SESSION['ukm_id']) ? $_SESSION['ukm_id'] : (count($ukms) > 0 ? $ukms[0]['id'] : null));
+
+// If in preview mode, use the first UKM
+if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
+    $ukm_id = $ukms[0]['id'];
+}
 
 // Store selected UKM in session
 if($ukm_id) {

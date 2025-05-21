@@ -2,6 +2,9 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
+require_once('../api/auth.php');
+requireApiAuth();
+
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 include('../class/finance.php');
 $api = new Finance();

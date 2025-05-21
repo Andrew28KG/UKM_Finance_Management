@@ -5,6 +5,9 @@ header("Access-Control-Allow-Methods: POST, DELETE");
 header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
+require_once('../api/auth.php');
+requireApiAuth();
+
 $requestMethod = $_SERVER["REQUEST_METHOD"];
 include('../class/finance.php');
 $api = new Finance();

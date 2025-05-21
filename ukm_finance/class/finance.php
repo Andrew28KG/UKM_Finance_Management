@@ -22,6 +22,10 @@ class Finance {
 
     // Get all transactions
     public function getTransaksi($ukm_id = null) {
+        if(isset($_SESSION['preview_mode'])) {
+            return $this->getPreviewTransaksi($ukm_id);
+        }
+
         $whereClause = "";
         if($ukm_id) {
             $whereClause = " WHERE ukm_id = '$ukm_id'";
@@ -45,6 +49,44 @@ class Finance {
         }
         
         return $transaksiData;
+    }
+
+    // Get preview transactions
+    private function getPreviewTransaksi($ukm_id = null) {
+        $sampleData = [
+            [
+                'id' => 1,
+                'ukm_id' => $ukm_id,
+                'nama_ukm' => 'Sample UKM',
+                'jenis' => 'pemasukan',
+                'kategori' => 'Iuran Anggota',
+                'jumlah' => 500000,
+                'tanggal' => date('Y-m-d'),
+                'keterangan' => 'Iuran bulanan anggota'
+            ],
+            [
+                'id' => 2,
+                'ukm_id' => $ukm_id,
+                'nama_ukm' => 'Sample UKM',
+                'jenis' => 'pengeluaran',
+                'kategori' => 'Konsumsi',
+                'jumlah' => 200000,
+                'tanggal' => date('Y-m-d', strtotime('-1 day')),
+                'keterangan' => 'Konsumsi rapat mingguan'
+            ],
+            [
+                'id' => 3,
+                'ukm_id' => $ukm_id,
+                'nama_ukm' => 'Sample UKM',
+                'jenis' => 'pemasukan',
+                'kategori' => 'Sponsorship',
+                'jumlah' => 1000000,
+                'tanggal' => date('Y-m-d', strtotime('-2 day')),
+                'keterangan' => 'Sponsor dari PT XYZ'
+            ]
+        ];
+        
+        return $sampleData;
     }
 
     // Get transactions as JSON
@@ -109,6 +151,10 @@ class Finance {
 
     // Get summary of transactions
     public function getLaporanKeuangan($ukm_id) {
+        if(isset($_SESSION['preview_mode'])) {
+            return $this->getPreviewLaporan($ukm_id);
+        }
+
         // Get total income
         $sqlPemasukan = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
                         WHERE ukm_id = '$ukm_id' AND jenis = 'pemasukan'";
@@ -146,8 +192,42 @@ class Finance {
         return $laporan;
     }
 
+    // Get preview financial report
+    private function getPreviewLaporan($ukm_id) {
+        $sampleData = [
+            'pemasukan' => 1500000,
+            'pengeluaran' => 200000,
+            'saldo' => 1300000,
+            'kategori' => [
+                [
+                    'kategori' => 'Iuran Anggota',
+                    'total' => 500000
+                ],
+                [
+                    'kategori' => 'Sponsorship',
+                    'total' => 1000000
+                ],
+                [
+                    'kategori' => 'Konsumsi',
+                    'total' => 200000
+                ]
+            ]
+        ];
+        
+        return $sampleData;
+    }
+
     // Get UKM list
     public function getUkm() {
+        if(isset($_SESSION['preview_mode'])) {
+            return [
+                [
+                    'id' => 1,
+                    'nama_ukm' => 'Sample UKM'
+                ]
+            ];
+        }
+
         $sqlQuery = "SELECT * FROM ".$this->tblUkm." ORDER BY nama_ukm";
         $result = mysqli_query($this->dbConnect, $sqlQuery);
         

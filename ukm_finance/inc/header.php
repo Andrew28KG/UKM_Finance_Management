@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script type="text/javascript" src="js/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
@@ -28,7 +28,10 @@
             <?php if(isset($_SESSION['user_id'])): ?>
               <a href="profile.php"><i class="fa fa-user" style="color: #4F4C4D; font-size:24px"></i></a>
               <a href="logout.php"><i class="fa fa-sign-out" style="color: #4F4C4D; font-size:24px"></i></a>
+            <?php elseif(isset($_SESSION['preview_mode'])): ?>
+              <a href="login.php" class="preview-mode-btn">Exit Preview</a>
             <?php else: ?>
+              <a href="preview.php" class="preview-mode-btn">Preview Mode</a>
               <a href="login.php"><i class="fa fa-sign-in" style="color: #4F4C4D; font-size:24px"></i> Login</a>
             <?php endif; ?>
           </div>

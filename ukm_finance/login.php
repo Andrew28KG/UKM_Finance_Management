@@ -1,12 +1,18 @@
 <?php
 session_start();
 include('inc/header.php');
+include('inc/auth.php');
 include('class/finance.php');
 
 // Check if user is already logged in
-if(isset($_SESSION['user_id'])) {
+if(isLoggedIn()) {
     header("Location: index.php");
     exit();
+}
+
+// Clear preview mode if coming from preview
+if(isset($_SESSION['preview_mode'])) {
+    unset($_SESSION['preview_mode']);
 }
 
 $error = '';
