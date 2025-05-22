@@ -28,12 +28,12 @@ if ($ukm_id) {
     }
 }
 
-// Mock notification data - in a real application, this would come from the database
+// Dummy notification data
 $notifications = [
     [
         'id' => 1,
         'title' => 'Pengajuan Dana Diterima',
-        'message' => 'Pengajuan dana untuk kegiatan Workshop Fotografi telah disetujui.',
+        'message' => 'Pengajuan dana untuk kegiatan Workshop Fotografi telah disetujui oleh bendahara.',
         'date' => '2023-05-15 14:30:00',
         'is_read' => false,
         'type' => 'success'
@@ -41,7 +41,7 @@ $notifications = [
     [
         'id' => 2,
         'title' => 'Transaksi Baru',
-        'message' => 'Bendahara telah menambahkan transaksi pengeluaran baru sebesar Rp. 500.000.',
+        'message' => 'Bendahara telah menambahkan transaksi pengeluaran baru sebesar Rp. 500.000 untuk pembelian peralatan.',
         'date' => '2023-05-12 10:15:00',
         'is_read' => true,
         'type' => 'info'
@@ -49,19 +49,45 @@ $notifications = [
     [
         'id' => 3,
         'title' => 'Pengingat Pelaporan',
-        'message' => 'Jangan lupa untuk menyerahkan laporan keuangan bulanan sebelum tanggal 30.',
+        'message' => 'Jangan lupa untuk menyerahkan laporan keuangan bulanan sebelum tanggal 30 bulan ini.',
         'date' => '2023-05-10 09:00:00',
         'is_read' => false,
         'type' => 'warning'
+    ],
+    [
+        'id' => 4,
+        'title' => 'Masalah Validasi Data',
+        'message' => 'Terdapat kesalahan pada data transaksi dengan ID #3421. Mohon periksa kembali.',
+        'date' => '2023-05-08 16:45:00',
+        'is_read' => true,
+        'type' => 'danger'
+    ],
+    [
+        'id' => 5,
+        'title' => 'Update Sistem',
+        'message' => 'Sistem keuangan telah diperbarui dengan fitur-fitur baru. Klik untuk melihat detail perubahan.',
+        'date' => '2023-05-05 08:30:00',
+        'is_read' => false,
+        'type' => 'info'
     ]
 ];
 
-// Mark notifications as read (if requested)
+// Mark all notifications as read (if requested)
 if (isset($_GET['mark_all_read'])) {
     // In a real app, you would update the database here
-    // For now, we'll just modify our mock data
     foreach ($notifications as $key => $notification) {
         $notifications[$key]['is_read'] = true;
+    }
+}
+
+// Mark specific notification as read (if requested)
+if (isset($_GET['mark_read']) && is_numeric($_GET['mark_read'])) {
+    $notificationId = (int)$_GET['mark_read'];
+    foreach ($notifications as $key => $notification) {
+        if ($notification['id'] == $notificationId) {
+            $notifications[$key]['is_read'] = true;
+            break;
+        }
     }
 }
 ?>
@@ -77,9 +103,11 @@ if (isset($_GET['mark_all_read'])) {
         <section class="notifications-page">
             <div class="page-header">
                 <h1>Notifikasi</h1>
-                <div class="notification-actions">
-                    <a href="?mark_all_read=1" class="btn btn-outline">Tandai Semua Dibaca</a>
-                </div>
+                <?php include('inc/profile_bar.php'); ?>
+            </div>
+            
+            <div class="notification-actions">
+                <a href="?mark_all_read=1" class="btn btn-outline">Tandai Semua Dibaca</a>
             </div>
             
             <div class="notification-container">
@@ -110,7 +138,7 @@ if (isset($_GET['mark_all_read'])) {
                                 <p><?php echo $notification['message']; ?></p>
                             </div>
                             <?php if (!$notification['is_read']): ?>
-                                <div class="notification-badge">Baru</div>
+                                <a href="?mark_read=<?php echo $notification['id']; ?>" class="notification-badge">Baru</a>
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
@@ -120,32 +148,56 @@ if (isset($_GET['mark_all_read'])) {
     </div>
 </div>
 
+<!-- Include profile.js for notification and profile functionality -->
+<script src="js/profile.js"></script>
 <script>
-// Content toggle button functionality
-document.getElementById('content-toggle-btn').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.toggle('collapsed');
-    document.getElementById('main-content').classList.toggle('expanded');
+document.addEventListener('DOMContentLoaded', function() {
+    // Content toggle button functionality
+    const contentToggleBtn = document.getElementById('content-toggle-btn');
+    if (contentToggleBtn) {
+        contentToggleBtn.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('main-content').classList.toggle('expanded');
+            
+            // Save sidebar state to localStorage
+            if (document.getElementById('sidebar').classList.contains('collapsed')) {
+                localStorage.setItem('sidebar', 'collapsed');
+            } else {
+                localStorage.setItem('sidebar', 'expanded');
+            }
+        });
+    }
+
+    // Mobile detection on page load
+    function checkMobile() {
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebar').classList.add('collapsed');
+            document.getElementById('main-content').classList.add('expanded');
+        } else if (localStorage.getItem('sidebar') !== 'collapsed') {
+            document.getElementById('sidebar').classList.remove('collapsed');
+            document.getElementById('main-content').classList.remove('expanded');
+        }
+    }
+
+    // Check on page load and resize
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     
-    // Save sidebar state to localStorage
-    if (document.getElementById('sidebar').classList.contains('collapsed')) {
-        localStorage.setItem('sidebar', 'collapsed');
-    } else {
-        localStorage.setItem('sidebar', 'expanded');
-    }
+    // Add click handler for notification cards
+    const notificationCards = document.querySelectorAll('.notification-card');
+    notificationCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Ignore if clicking on the "Mark as read" link
+            if (e.target.classList.contains('notification-badge') || e.target.closest('.notification-badge')) return;
+            
+            // If it's unread, mark it as read
+            if (this.classList.contains('unread')) {
+                const badge = this.querySelector('.notification-badge');
+                if (badge && badge.getAttribute('href')) {
+                    window.location.href = badge.getAttribute('href');
+                }
+            }
+        });
+    });
 });
-
-// Mobile detection on page load
-function checkMobile() {
-    if (window.innerWidth <= 768) {
-        document.getElementById('sidebar').classList.add('collapsed');
-        document.getElementById('main-content').classList.add('expanded');
-    } else if (localStorage.getItem('sidebar') !== 'collapsed') {
-        document.getElementById('sidebar').classList.remove('collapsed');
-        document.getElementById('main-content').classList.remove('expanded');
-    }
-}
-
-// Check on page load and resize
-window.addEventListener('load', checkMobile);
-window.addEventListener('resize', checkMobile);
 </script>

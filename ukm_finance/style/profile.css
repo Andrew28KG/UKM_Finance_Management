@@ -1,0 +1,490 @@
+/* 
+ * Profile CSS - Minimal version 
+ * All header profile and notification styles have been removed
+ */
+
+/* Basic styling for profile-related elements if needed in the future */
+.profile-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    margin-bottom: 20px;
+}
+
+.profile-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.profile-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* 
+ * Enhanced Profile CSS with Notification Dropdown
+ */
+
+/* Top Right Section */
+.top-right-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Increase search container width */
+.top-right-section .search-container {
+    flex: 4;
+    min-width: 500px;
+    max-width: 1000px;
+}
+
+/* Profile Actions Container */
+.profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Dropdown Base Styles */
+.notification-dropdown,
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    min-width: 320px;
+    background-color: var(--card-bg, #fff);
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    overflow: hidden;
+    margin-top: 10px;
+    border: 1px solid var(--border-color, #eaeaea);
+}
+
+.dropdown-content.show {
+    display: block;
+    animation: dropdown-fade 0.2s ease-out;
+}
+
+@keyframes dropdown-fade {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color, #eaeaea);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color, #333);
+}
+
+.dropdown-body {
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.dropdown-footer {
+    padding: 12px 15px;
+    text-align: center;
+    border-top: 1px solid var(--border-color, #eaeaea);
+}
+
+.dropdown-footer a {
+    color: var(--primary-color, #2D664A);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.dropdown-footer a:hover {
+    text-decoration: underline;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    color: var(--text-color, #333);
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(45, 102, 74, 0.05);
+}
+
+.dropdown-item i {
+    font-size: 16px;
+    color: var(--primary-color, #2D664A);
+}
+
+.text-danger {
+    color: var(--danger-color, #FF5252) !important;
+}
+
+.dropdown-item.text-danger i {
+    color: var(--danger-color, #FF5252);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: var(--border-color, #eaeaea);
+    margin: 5px 0;
+}
+
+/* Notification Button */
+.notification-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    color: var(--text-color-light, #555);
+}
+
+.notification-btn:hover {
+    background-color: rgba(45, 102, 74, 0.08);
+    color: var(--primary-color, #2D664A);
+}
+
+.notification-btn i {
+    font-size: 18px;
+}
+
+.notification-badge-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: var(--danger-color, #FF5252);
+    color: white;
+    border-radius: 50%;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 0 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid white;
+}
+
+/* Profile Button */
+.profile-btn {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 20px;
+    transition: all 0.2s;
+    gap: 8px;
+}
+
+.profile-btn:hover {
+    background-color: rgba(45, 102, 74, 0.08);
+}
+
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #2D664A);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.profile-avatar-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #2D664A);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.profile-name-short {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color, #333);
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-btn i.fa-chevron-down {
+    font-size: 12px;
+    color: var(--text-color-light, #777);
+    transition: transform 0.2s;
+}
+
+.profile-dropdown.show .profile-btn i.fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+/* Profile Dropdown Specific */
+.profile-dropdown-content {
+    min-width: 250px;
+}
+
+.dropdown-header.profile-header {
+    display: flex;
+    padding: 20px 15px;
+}
+
+.profile-details h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color, #333);
+    margin-bottom: 2px;
+}
+
+.profile-details p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-color-light, #777);
+}
+
+/* Notification Dropdown Specific */
+.notification-dropdown-content {
+    min-width: 350px;
+}
+
+.mark-all-read {
+    font-size: 12px;
+    color: var(--primary-color, #2D664A);
+    text-decoration: none;
+}
+
+.mark-all-read:hover {
+    text-decoration: underline;
+}
+
+.notification-list {
+    padding: 0;
+}
+
+.dropdown-notification-item {
+    display: flex;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color, #eaeaea);
+    transition: background 0.2s;
+    position: relative;
+    gap: 12px;
+}
+
+.dropdown-notification-item:hover {
+    background-color: rgba(45, 102, 74, 0.03);
+}
+
+.dropdown-notification-item.unread {
+    background-color: rgba(45, 102, 74, 0.03);
+}
+
+.dropdown-notification-item.unread::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+}
+
+.dropdown-notification-item.success.unread::before {
+    background-color: #4CAF50;
+}
+
+.dropdown-notification-item.warning.unread::before {
+    background-color: #FF9800;
+}
+
+.dropdown-notification-item.danger.unread::before {
+    background-color: var(--danger-color, #FF5252);
+}
+
+.dropdown-notification-item.info.unread::before {
+    background-color: var(--primary-color, #2D664A);
+}
+
+.notification-icon-small {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropdown-notification-item.success .notification-icon-small {
+    background-color: rgba(76, 175, 80, 0.1);
+    color: #4CAF50;
+}
+
+.dropdown-notification-item.warning .notification-icon-small {
+    background-color: rgba(255, 152, 0, 0.1);
+    color: #FF9800;
+}
+
+.dropdown-notification-item.danger .notification-icon-small {
+    background-color: rgba(255, 82, 82, 0.1);
+    color: var(--danger-color, #FF5252);
+}
+
+.dropdown-notification-item.info .notification-icon-small {
+    background-color: rgba(45, 102, 74, 0.1);
+    color: var(--primary-color, #2D664A);
+}
+
+.notification-content-small {
+    flex: 1;
+}
+
+.notification-content-small h4 {
+    margin: 0 0 3px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color, #333);
+}
+
+.notification-content-small p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-color-light, #777);
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+.notification-time-small {
+    font-size: 11px;
+    color: #888;
+}
+
+.empty-dropdown-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    color: var(--text-color-light, #777);
+}
+
+.empty-dropdown-state i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.empty-dropdown-state p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Dark mode support */
+body.dark-mode .notification-btn,
+body.dark-mode .profile-btn {
+    color: #e0e0e0;
+}
+
+body.dark-mode .notification-btn:hover,
+body.dark-mode .profile-btn:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .profile-name-short {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-content {
+    background-color: #2a2a2a;
+    border-color: #3a3a3a;
+}
+
+body.dark-mode .dropdown-header,
+body.dark-mode .dropdown-footer,
+body.dark-mode .dropdown-notification-item {
+    border-color: #3a3a3a;
+}
+
+body.dark-mode .dropdown-notification-item:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode .dropdown-notification-item.unread {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .dropdown-divider {
+    background-color: #3a3a3a;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .profile-name-short {
+        display: none;
+    }
+    
+    .notification-dropdown-content,
+    .profile-dropdown-content {
+        position: fixed;
+        top: 70px;
+        right: 0;
+        left: 0;
+        width: 100%;
+        max-width: none;
+        min-width: 0;
+        margin-top: 0;
+        height: calc(100vh - 70px);
+        border-radius: 0;
+    }
+    
+    .dropdown-body {
+        max-height: calc(100vh - 150px);
+    }
+}

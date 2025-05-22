@@ -10,47 +10,39 @@
     </div>
     <div class="sidebar-menu">
         <ul>
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>">
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'index.php') ? 'active' : ''; ?>" style="--item-index: 0;">
                 <a href="index.php">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'transaksi.php') ? 'active' : ''; ?>">
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'transaksi.php') ? 'active' : ''; ?>" style="--item-index: 1;">
                 <a href="transaksi.php">
                     <i class="fas fa-exchange-alt"></i>
                     <span>Transaksi</span>
                 </a>
             </li>
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'notifications.php') ? 'active' : ''; ?>">
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'notifications.php') ? 'active' : ''; ?>" style="--item-index: 2;">
                 <a href="notifications.php">
                     <i class="fas fa-bell"></i>
                     <span>Notifikasi</span>
                     <span class="notification-badge">3</span>
                 </a>
             </li>
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'wallet.php') ? 'active' : ''; ?>">
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'wallet.php') ? 'active' : ''; ?>" style="--item-index: 3;">
                 <a href="wallet.php">
                     <i class="fas fa-wallet"></i>
                     <span>Dompet Saya</span>
                 </a>
-            </li>            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'request.php') ? 'active' : ''; ?>">
+            </li>            
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'request.php') ? 'active' : ''; ?>" style="--item-index: 4;">
                 <a href="request.php">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Request Budget</span>
                 </a>
             </li>
         </ul>
-    </div>
-    <div class="sidebar-footer">
-        <div class="theme-toggle">
-            <label class="toggle-switch">
-                <input type="checkbox" id="theme-toggle">
-                <span class="toggle-slider"></span>
-                <i class="fas fa-sun"></i>
-                <i class="fas fa-moon"></i>
-            </label>
-        </div>
+    </div>    <div class="sidebar-footer">
         <div class="logout">
             <a href="logout.php">
                 <i class="fas fa-sign-out-alt"></i>
@@ -60,14 +52,25 @@
     </div>
 </div>
 
-<script>    // Toggle sidebar on mobile
+<script>
+    // Toggle sidebar on mobile
     document.getElementById('sidebar-toggle').addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('collapsed');
-        document.getElementById('main-content').classList.toggle('expanded');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('expanded');
+        
+        // Save sidebar state to localStorage
+        if(sidebar.classList.contains('collapsed')) {
+            localStorage.setItem('sidebar', 'collapsed');
+        } else {
+            localStorage.setItem('sidebar', 'expanded');
+        }
         
         // Add overlay effect for mobile
         if (window.innerWidth <= 768) {
-            if (document.getElementById('sidebar').classList.contains('collapsed')) {
+            if (sidebar.classList.contains('collapsed')) {
                 document.body.classList.remove('overlay-active');
             } else {
                 document.body.classList.add('overlay-active');
@@ -75,24 +78,13 @@
         }
     });
     
-    // Theme toggle functionality
-    document.getElementById('theme-toggle').addEventListener('change', function() {
-        if(this.checked) {
-            document.body.classList.add('dark-mode');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.body.classList.remove('dark-mode');
-            localStorage.setItem('theme', 'light');
-        }
-    });
-    
-    // Check for saved theme preference
+    // Check for saved sidebar state and initialize other functionality
     document.addEventListener('DOMContentLoaded', function() {
-        const savedTheme = localStorage.getItem('theme');
-        if(savedTheme === 'dark') {
-            document.getElementById('theme-toggle').checked = true;
-            document.body.classList.add('dark-mode');
-        }
+        // Remove any dark mode class if it exists
+        document.body.classList.remove('dark-mode');
+        
+        // Clear any saved theme preference
+        localStorage.removeItem('theme');
         
         // Check for saved sidebar state
         const sidebarState = localStorage.getItem('sidebar');
@@ -117,27 +109,56 @@
         
         // Listen for window resize events
         window.addEventListener('resize', checkMobile);
-    });
-      // Save sidebar state
-    document.getElementById('sidebar-toggle').addEventListener('click', function() {
-        if(document.getElementById('sidebar').classList.contains('collapsed')) {
-            localStorage.setItem('sidebar', 'collapsed');
-        } else {
-            localStorage.setItem('sidebar', 'expanded');
-        }
-    });
-    
-    // Content toggle button functionality
-    if(document.getElementById('content-toggle-btn')) {
-        document.getElementById('content-toggle-btn').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-            document.getElementById('main-content').classList.toggle('expanded');
+        
+        // Add touch swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, false);
+        
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+        
+        function handleSwipe() {
+            const sidebar = document.getElementById('sidebar');
+            const swipeThreshold = 100;
             
-            if(document.getElementById('sidebar').classList.contains('collapsed')) {
+            if (touchEndX - touchStartX > swipeThreshold) {
+                // Swipe right - open sidebar
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    document.getElementById('main-content').classList.remove('expanded');
+                    document.body.classList.add('overlay-active');
+                    localStorage.setItem('sidebar', 'expanded');
+                }
+            } else if (touchStartX - touchEndX > swipeThreshold) {
+                // Swipe left - close sidebar
+                if (!sidebar.classList.contains('collapsed') && window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                    document.getElementById('main-content').classList.add('expanded');
+                    document.body.classList.remove('overlay-active');
+                    localStorage.setItem('sidebar', 'collapsed');
+                }
+            }
+        }
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(e) {
+            const sidebar = document.getElementById('sidebar');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !sidebar.classList.contains('collapsed') &&
+                !e.target.closest('#content-toggle-btn')) {
+                sidebar.classList.add('collapsed');
+                document.getElementById('main-content').classList.add('expanded');
+                document.body.classList.remove('overlay-active');
                 localStorage.setItem('sidebar', 'collapsed');
-            } else {
-                localStorage.setItem('sidebar', 'expanded');
             }
         });
-    }
+    });
 </script>

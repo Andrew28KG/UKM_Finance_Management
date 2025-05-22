@@ -71,26 +71,18 @@ $total_results = count($results['transactions']) + count($results['reports']) + 
                 <i class="fas fa-chevron-left"></i>
             </button>
         </div>
-        <section class="search-results-page">
-            <div class="page-header">
+        <section class="search-results-page">            <div class="page-header">
                 <h1>Hasil Pencarian</h1>
-                <p class="ukm-title">
-                    <?php echo $ukm_name ? "$ukm_name" : "Pilih UKM terlebih dahulu"; ?>
-                </p>
+                <?php include('inc/profile_bar.php'); ?>
             </div>
             
-            <div class="search-summary">
+            <p class="ukm-title">
+                <?php echo $ukm_name ? "$ukm_name" : "Pilih UKM terlebih dahulu"; ?>
+            </p>
+              <div class="search-summary">
                 <div class="search-info">
                     <p>Hasil untuk: <strong>"<?php echo htmlspecialchars($search_query); ?>"</strong></p>
                     <p><?php echo $total_results; ?> hasil ditemukan</p>
-                </div>
-                <div class="search-container">
-                    <form action="search_results.php" method="GET" class="search-form">
-                        <input type="text" name="query" value="<?php echo htmlspecialchars($search_query); ?>" placeholder="Cari transaksi, laporan, atau kegiatan..." class="search-input">
-                        <button type="submit" class="search-btn">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
                 </div>
             </div>
             

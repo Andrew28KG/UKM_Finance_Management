@@ -13,7 +13,15 @@ switch($requestMethod) {
     case 'GET':
         // Check if UKM ID is provided
         $ukm_id = isset($_GET['ukm_id']) ? $_GET['ukm_id'] : null;
-        $api->getTransaksiJson($ukm_id);
+        
+        // Check if time range is provided (day, week, month)
+        $time_range = isset($_GET['time_range']) ? $_GET['time_range'] : null;
+        
+        if ($time_range) {
+            $api->getTimelineData($ukm_id, $time_range);
+        } else {
+            $api->getTransaksiJson($ukm_id);
+        }
         break;
     default:
         header("HTTP/1.0 405 Method Not Allowed");

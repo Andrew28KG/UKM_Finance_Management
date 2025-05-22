@@ -89,7 +89,10 @@ for($i = 5; $i >= 0; $i--) {
 ?>
 
 <section class="laporan-page">
-    <h1>Laporan Keuangan <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
+    <div class="page-header">
+        <h1>Laporan Keuangan <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
+        <?php include('inc/profile_bar.php'); ?>
+    </div>
     
     <?php if($ukm_id): ?>
         <div class="ukm-selector">

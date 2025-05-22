@@ -43,9 +43,11 @@ foreach($ukms as $ukm) {
             <button id="content-toggle-btn">
                 <i class="fas fa-chevron-left"></i>
             </button>
-        </div>
-        <section class="transaksi-page">
-            <h1>Manajemen Transaksi <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
+        </div>        <section class="transaksi-page">
+            <div class="page-header">
+                <h1>Manajemen Transaksi <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
+                <?php include('inc/profile_bar.php'); ?>
+            </div>
     
     <?php if($ukm_id): ?>
         <div class="ukm-selector">

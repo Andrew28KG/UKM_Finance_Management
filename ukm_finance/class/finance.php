@@ -248,8 +248,51 @@ class Finance {
         ];
         
         return $sampleData;
+    }    // Get all UKM saldo/balances
+    public function getAllUkmSaldo() {
+        if(isset($_SESSION['preview_mode'])) {
+            return [
+                ['id' => 1, 'nama_ukm' => 'UKM Olahraga', 'saldo' => 1500000],
+                ['id' => 2, 'nama_ukm' => 'UKM Musik', 'saldo' => 2300000],
+                ['id' => 3, 'nama_ukm' => 'UKM Fotografi', 'saldo' => 1800000],
+                ['id' => 4, 'nama_ukm' => 'UKM Jurnalistik', 'saldo' => 1200000],
+                ['id' => 5, 'nama_ukm' => 'UKM Pecinta Alam', 'saldo' => 2000000]
+            ];
+        }
+        
+        // Get all UKMs
+        $ukms = $this->getUkm();
+        $result = [];
+        
+        // For each UKM, calculate saldo
+        foreach ($ukms as $ukm) {
+            $ukm_id = $ukm['id'];
+            
+            // Get total income
+            $sqlPemasukan = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
+                          WHERE ukm_id = '$ukm_id' AND jenis = 'pemasukan'";
+            $resultPemasukan = mysqli_query($this->dbConnect, $sqlPemasukan);
+            $pemasukan = mysqli_fetch_assoc($resultPemasukan)['total'] ?: 0;
+            
+            // Get total expense
+            $sqlPengeluaran = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
+                            WHERE ukm_id = '$ukm_id' AND jenis = 'pengeluaran'";
+            $resultPengeluaran = mysqli_query($this->dbConnect, $sqlPengeluaran);
+            $pengeluaran = mysqli_fetch_assoc($resultPengeluaran)['total'] ?: 0;
+            
+            // Calculate balance
+            $saldo = $pemasukan - $pengeluaran;
+            
+            $result[] = [
+                'id' => $ukm_id,
+                'nama_ukm' => $ukm['nama_ukm'],
+                'saldo' => $saldo
+            ];
+        }
+        
+        return $result;
     }
-
+    
     // Get UKM list
     public function getUkm() {
         if(isset($_SESSION['preview_mode'])) {
@@ -358,15 +401,206 @@ class Finance {
         
         $dom->appendChild($root);
         $dom->save($filePath);
-    }
-
-    // Get transactions as XML
+    }    // Get transactions as XML
     public function getXml($ukm_id = null) {
         $transaksiArray = $this->getTransaksi($ukm_id);
         
         if(count($transaksiArray)) {
             $this->createXMLfile($transaksiArray);
         }
+    }
+    
+    // Get timeline data for income and expenses over time
+    public function getTimelineData($ukm_id = null, $time_range = 'month') {
+        if(isset($_SESSION['preview_mode'])) {
+            return $this->getPreviewTimelineData($ukm_id, $time_range);
+        }
+        
+        // Set time constraints based on time_range
+        $timeConstraint = '';
+        $groupBy = '';
+        $now = date('Y-m-d');
+        
+        switch($time_range) {
+            case 'day':
+                // Last 7 days
+                $startDate = date('Y-m-d', strtotime('-6 days'));
+                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
+                $groupBy = "DATE(t.tanggal)";
+                break;
+                
+            case 'week':
+                // Last 8 weeks
+                $startDate = date('Y-m-d', strtotime('-7 weeks'));
+                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
+                $groupBy = "YEARWEEK(t.tanggal, 1)";
+                break;
+                
+            case 'month':
+            default:
+                // Last 12 months
+                $startDate = date('Y-m-d', strtotime('-11 months'));
+                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
+                $groupBy = "YEAR(t.tanggal), MONTH(t.tanggal)";
+                break;
+        }
+        
+        $whereClause = "WHERE 1=1";
+        if($ukm_id) {
+            $whereClause .= " AND t.ukm_id = '$ukm_id'";
+        }
+        
+        // Query for pemasukan (income)
+        $sqlPemasukan = "SELECT 
+                            $groupBy as period,
+                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
+                            SUM(t.jumlah) as total 
+                        FROM ".$this->tblTransaksi." t 
+                        $whereClause 
+                        AND t.jenis = 'pemasukan' 
+                        $timeConstraint 
+                        GROUP BY $groupBy 
+                        ORDER BY t.tanggal ASC";
+        
+        // Query for pengeluaran (expense)
+        $sqlPengeluaran = "SELECT 
+                            $groupBy as period,
+                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
+                            SUM(t.jumlah) as total 
+                        FROM ".$this->tblTransaksi." t 
+                        $whereClause 
+                        AND t.jenis = 'pengeluaran' 
+                        $timeConstraint 
+                        GROUP BY $groupBy 
+                        ORDER BY t.tanggal ASC";
+        
+        $resultPemasukan = mysqli_query($this->dbConnect, $sqlPemasukan);
+        $resultPengeluaran = mysqli_query($this->dbConnect, $sqlPengeluaran);
+        
+        if(!$resultPemasukan || !$resultPengeluaran) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Database query error: ' . mysqli_error($this->dbConnect)
+            ]);
+            exit;
+        }
+        
+        $pemasukanData = [];
+        $pengeluaranData = [];
+        $labels = [];
+        
+        // Process pemasukan data
+        while($row = mysqli_fetch_assoc($resultPemasukan)) {
+            $date = new DateTime($row['date_start']);
+            
+            if($time_range == 'day') {
+                $label = $date->format('d M');
+            } else if($time_range == 'week') {
+                $weekNumber = $date->format('W');
+                $label = 'W' . $weekNumber;
+            } else {
+                $label = $date->format('M y');
+            }
+            
+            if(!in_array($label, $labels)) {
+                $labels[] = $label;
+            }
+            
+            $pemasukanData[$label] = (int)$row['total'];
+        }
+        
+        // Process pengeluaran data
+        while($row = mysqli_fetch_assoc($resultPengeluaran)) {
+            $date = new DateTime($row['date_start']);
+            
+            if($time_range == 'day') {
+                $label = $date->format('d M');
+            } else if($time_range == 'week') {
+                $weekNumber = $date->format('W');
+                $label = 'W' . $weekNumber;
+            } else {
+                $label = $date->format('M y');
+            }
+            
+            if(!in_array($label, $labels)) {
+                $labels[] = $label;
+            }
+            
+            $pengeluaranData[$label] = (int)$row['total'];
+        }
+        
+        // Prepare final arrays
+        $pemasukanValues = [];
+        $pengeluaranValues = [];
+        
+        foreach($labels as $label) {
+            $pemasukanValues[] = isset($pemasukanData[$label]) ? $pemasukanData[$label] : 0;
+            $pengeluaranValues[] = isset($pengeluaranData[$label]) ? $pengeluaranData[$label] : 0;
+        }
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'success',
+            'labels' => $labels,
+            'pemasukan' => $pemasukanValues,
+            'pengeluaran' => $pengeluaranValues,
+            'time_range' => $time_range
+        ]);
+        exit;
+    }
+    
+    // Generate mock timeline data for preview mode
+    private function getPreviewTimelineData($ukm_id = null, $time_range = 'month') {
+        $labels = [];
+        $pemasukanValues = [];
+        $pengeluaranValues = [];
+        
+        switch($time_range) {
+            case 'day':
+                // Last 7 days
+                for($i = 6; $i >= 0; $i--) {
+                    $date = date('d M', strtotime("-$i days"));
+                    $labels[] = $date;
+                    $pemasukanValues[] = rand(100000, 500000);
+                    $pengeluaranValues[] = rand(80000, 400000);
+                }
+                break;
+                
+            case 'week':
+                // Last 8 weeks
+                for($i = 7; $i >= 0; $i--) {
+                    $weekNumber = date('W', strtotime("-$i weeks"));
+                    $labels[] = 'W' . $weekNumber;
+                    $pemasukanValues[] = rand(500000, 2000000);
+                    $pengeluaranValues[] = rand(400000, 1800000);
+                }
+                break;
+                
+            case 'month':
+            default:
+                // Last 12 months
+                for($i = 11; $i >= 0; $i--) {
+                    $month = date('M y', strtotime("-$i months"));
+                    $labels[] = $month;
+                    $pemasukanValues[] = rand(2000000, 8000000);
+                    $pengeluaranValues[] = rand(1500000, 7000000);
+                }
+                break;
+        }
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'success',
+            'labels' => $labels,
+            'pemasukan' => $pemasukanValues,
+            'pengeluaran' => $pengeluaranValues,
+            'time_range' => $time_range,
+            'preview' => true
+        ]);
+        exit;
     }
 }
 ?>

@@ -1,7 +1,7 @@
 // Toast notification system for UKM Finance Management
 
 // Function to show a toast notification
-function showToast(message, type = 'info', duration = 3000) {
+function showToast(title, message = '', type = 'info', duration = 3000) {
     // Remove any existing toasts
     const existingToast = document.querySelector('.toast-notification');
     if (existingToast) {
@@ -29,10 +29,32 @@ function showToast(message, type = 'info', duration = 3000) {
     }
     
     // Set toast content
-    toast.innerHTML = `${icon} ${message}`;
+    let content = `
+        <div class="toast-header">
+            ${icon} <strong>${title}</strong>
+            <button class="toast-close">&times;</button>
+        </div>
+    `;
+    
+    if (message) {
+        content += `<div class="toast-body">${message}</div>`;
+    }
+    
+    toast.innerHTML = content;
     
     // Add toast to document
     document.body.appendChild(toast);
+    
+    // Add close button functionality
+    const closeBtn = toast.querySelector('.toast-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        });
+    }
     
     // Remove toast after duration
     setTimeout(() => {

@@ -73,13 +73,14 @@ $wallet_cards = [
                 <i class="fas fa-chevron-left"></i>
             </button>
         </div>
-        <section class="wallet-page">
-            <div class="page-header">
+        <section class="wallet-page">            <div class="page-header">
                 <h1>Dompet Saya</h1>
-                <p class="ukm-title">
-                    <?php echo $ukm_name ? "$ukm_name" : "Pilih UKM terlebih dahulu"; ?>
-                </p>
+                <?php include('inc/profile_bar.php'); ?>
             </div>
+            
+            <p class="ukm-title">
+                <?php echo $ukm_name ? "$ukm_name" : "Pilih UKM terlebih dahulu"; ?>
+            </p>
             
             <div class="wallet-overview">
                 <?php foreach ($wallet_cards as $card): ?>

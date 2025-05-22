@@ -294,9 +294,16 @@ body.dark-mode .recent-transactions,
 body.dark-mode .dashboard-notifications,
 body.dark-mode .pending-requests-dashboard,
 body.dark-mode .welcome-section {
-    background-color: #2d2d2d;
+    background-color: #1a1a1a;
     color: #f5f5f5;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .profile-avatar {
+    background-color: #3a7659; /* darker primary color for dark mode */
+}
+
+body.dark-mode .welcome-message h1 {
+    color: #f5f5f5;
 }
 
 body.dark-mode table {
@@ -375,6 +382,15 @@ body.dark-mode .content-toggle button {
 body, .card, .chart-card, .recent-transactions, table, th, td, .search-input, 
 .search-btn, .filter-period, .notification-card-compact, .request-card-compact {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hide content-toggle globally */
+.content-toggle {
+    display: none !important;
+}
+
+#content-toggle-btn {
+    display: none !important;
 }
 
 /* Responsive Sidebar */
@@ -531,6 +547,11 @@ body, .card, .chart-card, .recent-transactions, table, th, td, .search-input,
     padding: 0;
 }
 
+.transaksi-page {
+    padding-left: 24px;
+    padding-right: 24px;
+}
+
 .summary-cards {
     display: flex;
     justify-content: space-between;
@@ -596,14 +617,26 @@ body, .card, .chart-card, .recent-transactions, table, th, td, .search-input,
     font-weight: 600;
 }
 
+.chart-container {
+    display: flex;
+    gap: 25px;
+    width: 100%;
+    margin-bottom: 25px;
+    overflow: visible;
+}
+
 .chart-card {
+    flex: 1;
     background-color: var(--card-bg);
     border-radius: 12px;
     padding: 25px;
-    margin-bottom: 25px;
+    margin-bottom: 0;
     border: none;
-    height: 350px;
+    min-height: 350px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .chart-card h3 {
@@ -611,6 +644,7 @@ body, .card, .chart-card, .recent-transactions, table, th, td, .search-input,
     margin-bottom: 15px;
     color: #333;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* Pie chart styling */
@@ -737,8 +771,8 @@ tr.pengeluaran td:last-child {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 30px;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .transaksi-form, .transaksi-list {
@@ -931,11 +965,12 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
 }
 
 .notification-actions {
     display: flex;
+    margin-bottom: 20px;
     gap: 10px;
 }
 
@@ -1055,6 +1090,9 @@ footer {
 .ukm-title {
     color: #555;
     margin-top: 5px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    padding: 0 20px;
 }
 
 .wallet-overview {
@@ -1302,16 +1340,22 @@ footer {
     .dashboard-column:last-child {
         grid-column: span 1;
     }
-    
-    .welcome-section {
+      .welcome-section {
         flex-direction: column;
         align-items: flex-start;
         padding: 25px 20px;
     }
     
-    .search-container {
+    .top-right-section {
         width: 100%;
         margin-top: 15px;
+        justify-content: space-between;
+    }
+    
+    .search-container {
+        width: 100%;
+        max-width: none;
+        margin-right: 10px;
     }
     
     .summary-cards {
@@ -1468,19 +1512,16 @@ footer {
 
 /* Welcome Section and Search Bar */
 .welcome-section {
-    /* background: white; */
-    padding: 0px 20px;
-    /* margin-bottom: 30px; */
-    color: #333;
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 25px;
+    padding: 0 20px;
 }
 
 .welcome-message {
-    flex: 1;
-    min-width: 300px;
+    flex: 0 1 auto;
+    max-width: 300px;
 }
 
 .welcome-message h1 {
@@ -1496,17 +1537,17 @@ footer {
 }
 
 .search-container {
-    flex: 1;
-    min-width: 300px;
-    margin-top: 20px;
+    margin-right: 15px;
+    max-width: 1000px !important;
+    flex: 4 !important;
+    min-width: 500px !important;
+    width: 100% !important;
 }
 
 .search-form {
     display: flex;
     position: relative;
     width: 100%;
-    max-width: 400px;
-    margin-left: auto;
 }
 
 .search-input {
@@ -1763,11 +1804,6 @@ footer {
     border: 1px solid #f5f5f5;
     position: relative;
     transition: all 0.3s ease;
-}
-
-.notification-card-compact:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
 }
 
 .notification-card-compact.unread {
@@ -2053,4 +2089,132 @@ body.dark-mode .loading-overlay p {
 body.dark-mode .loading-spinner-large {
     border: 4px solid rgba(255, 255, 255, 0.1);
     border-top-color: var(--primary-color);
+}
+
+/* Improved Z-index for sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        z-index: 999;
+    }
+    
+    /* Ensure main content stays behind overlay when sidebar is open */
+    body.overlay-active #main-content {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+/* Pie chart with info panel */
+.pie-chart-container {
+    padding: 20px;
+    height: auto;
+    overflow: hidden;
+}
+
+.pie-chart-content {
+    display: flex;
+    flex: 1;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.pie-chart-canvas {
+    flex: 1.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 100%;
+}
+
+.pie-chart-canvas canvas {
+    max-height: 260px;
+}
+
+.pie-chart-info {
+    width: 220px;
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.pie-chart-info h4 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.ukm-saldo-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+}
+
+.ukm-saldo-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ukm-saldo-item:last-child {
+    border-bottom: none;
+}
+
+.ukm-color-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.ukm-name {
+    flex: 1;
+    font-size: 14px;
+    padding-right: 5px;
+}
+
+/* Customize scrollbar for the UKM list */
+.ukm-saldo-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ukm-saldo-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 2px;
+}
+
+.ukm-saldo-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+}
+
+/* Responsive styling for pie chart with info panel */
+@media (max-width: 1024px) {
+    .pie-chart-content {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .pie-chart-canvas {
+        height: 260px;
+        min-height: auto;
+        margin-bottom: 15px;
+    }
+    
+    .pie-chart-info {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding-left: 0;
+        padding-top: 15px;
+        margin-top: 15px;
+        height: 200px;
+    }
 }
