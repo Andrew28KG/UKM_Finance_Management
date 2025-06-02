@@ -14,21 +14,61 @@ $ukm_id = isset($_GET['ukm_id']) ? $_GET['ukm_id'] : (isset($_SESSION['ukm_id'])
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'add') {
-        $result = $finance->tambahTransaksi([
-            'ukm_id' => $_POST['ukm_id'],
-            'jenis' => $_POST['jenis'],
-            'kategori' => $_POST['kategori'],
-            'jumlah' => $_POST['jumlah'],
-            'tanggal' => $_POST['tanggal'],
-            'keterangan' => $_POST['keterangan']
-        ]);
-        
-        if ($result['status'] === 1) {
-            header("Location: transaksi.php?ukm_id=" . $_POST['ukm_id'] . "&success=1");
-            exit();
+    $imageValue = '';
+    
+    // Handle image upload or URL
+    if (!empty($_FILES['image_upload']['name'])) {
+        // File upload
+        $uploadResult = $finance->handleImageUpload($_FILES['image_upload']);
+        if ($uploadResult['status'] === 1) {
+            $imageValue = $uploadResult['filepath'];
         } else {
-            $error_message = $result['status_pesan'];
+            $error_message = $uploadResult['message'];
+        }
+    } elseif (!empty($_POST['image_url'])) {
+        // Image URL
+        if ($finance->validateImageUrl($_POST['image_url'])) {
+            $imageValue = $_POST['image_url'];
+        } else {
+            $error_message = "Invalid image URL provided";
+        }
+    }
+    
+    if (!isset($error_message)) {
+        if ($_POST['action'] === 'add') {
+            $result = $finance->tambahTransaksi([
+                'ukm_id' => $_POST['ukm_id'],
+                'jenis' => $_POST['jenis'],
+                'kategori' => $_POST['kategori'],
+                'jumlah' => $_POST['jumlah'],
+                'tanggal' => $_POST['tanggal'],
+                'keterangan' => $_POST['keterangan'],
+                'image' => $imageValue
+            ]);
+            
+            if ($result['status'] === 1) {
+                header("Location: transaksi.php?ukm_id=" . $_POST['ukm_id'] . "&success=1");
+                exit();
+            } else {
+                $error_message = $result['status_pesan'];
+            }
+        } elseif ($_POST['action'] === 'edit') {
+            $result = $finance->updateTransaksi($_POST['id'], [
+                'ukm_id' => $_POST['ukm_id'],
+                'jenis' => $_POST['jenis'],
+                'kategori' => $_POST['kategori'],
+                'jumlah' => $_POST['jumlah'],
+                'tanggal' => $_POST['tanggal'],
+                'keterangan' => $_POST['keterangan'],
+                'image' => $imageValue
+            ]);
+            
+            if ($result['status'] === 1) {
+                header("Location: transaksi.php?ukm_id=" . $_POST['ukm_id'] . "&success=3");
+                exit();
+            } else {
+                $error_message = $result['status_pesan'];
+            }
         }
     }
 }
@@ -57,6 +97,12 @@ if($ukm_id) {
 // Get transactions for the selected UKM
 $transaksi = $finance->getTransaksi($ukm_id);
 
+// Get transaction to edit if edit_id is provided
+$edit_transaksi = null;
+if (isset($_GET['edit_id'])) {
+    $edit_transaksi = $finance->getTransaksiById($_GET['edit_id']);
+}
+
 // Get UKM name
 $ukm_name = "";
 foreach($ukms as $ukm) {
@@ -82,8 +128,7 @@ foreach($ukms as $ukm) {
                 <?php include('inc/profile_bar.php'); ?>
             </div>
     
-    <?php if($ukm_id): ?>
-        <?php if(isset($_GET['success'])): ?>
+    <?php if($ukm_id): ?>        <?php if(isset($_GET['success'])): ?>
             <div class="alert <?php echo $_GET['success'] == 1 ? 'alert-success' : 'alert-success'; ?>">
                 <?php 
                 switch($_GET['success']) {
@@ -92,6 +137,9 @@ foreach($ukms as $ukm) {
                         break;
                     case 2:
                         echo 'Transaksi berhasil dihapus';
+                        break;
+                    case 3:
+                        echo 'Transaksi berhasil diupdate';
                         break;
                 }
                 ?>
@@ -117,44 +165,77 @@ foreach($ukms as $ukm) {
             </form>
         </div>
         
-        <div class="transaksi-container">
-            <div class="transaksi-form">
-                <h2>Tambah Transaksi Baru</h2>
-                <form method="POST" action="">
-                    <input type="hidden" name="action" value="add">
+        <div class="transaksi-container">            <div class="transaksi-form">
+                <h2><?php echo $edit_transaksi ? 'Edit Transaksi' : 'Tambah Transaksi Baru'; ?></h2>
+                <form method="POST" action="" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="<?php echo $edit_transaksi ? 'edit' : 'add'; ?>">
                     <input type="hidden" name="ukm_id" value="<?php echo $ukm_id; ?>">
+                    <?php if ($edit_transaksi): ?>
+                        <input type="hidden" name="id" value="<?php echo $edit_transaksi['id']; ?>">
+                    <?php endif; ?>
                     
                     <div class="form-group">
                         <label for="jenis">Jenis Transaksi:</label>
                         <select name="jenis" id="jenis" required>
                             <option value="">Pilih Jenis</option>
-                            <option value="pemasukan">Pemasukan</option>
-                            <option value="pengeluaran">Pengeluaran</option>
+                            <option value="pemasukan" <?php echo ($edit_transaksi && $edit_transaksi['jenis'] == 'pemasukan') ? 'selected' : ''; ?>>Pemasukan</option>
+                            <option value="pengeluaran" <?php echo ($edit_transaksi && $edit_transaksi['jenis'] == 'pengeluaran') ? 'selected' : ''; ?>>Pengeluaran</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="kategori">Kategori:</label>
-                        <input type="text" name="kategori" id="kategori" required placeholder="Contoh: Iuran, Sponsorship, Konsumsi, dll">
+                        <input type="text" name="kategori" id="kategori" required placeholder="Contoh: Iuran, Sponsorship, Konsumsi, dll" value="<?php echo $edit_transaksi ? htmlspecialchars($edit_transaksi['kategori']) : ''; ?>">
                     </div>
                     
                     <div class="form-group">
                         <label for="jumlah">Jumlah (Rp):</label>
-                        <input type="number" name="jumlah" id="jumlah" required min="0">
+                        <input type="number" name="jumlah" id="jumlah" required min="0" value="<?php echo $edit_transaksi ? $edit_transaksi['jumlah'] : ''; ?>">
                     </div>
                     
                     <div class="form-group">
                         <label for="tanggal">Tanggal:</label>
-                        <input type="date" name="tanggal" id="tanggal" required value="<?php echo date('Y-m-d'); ?>">
+                        <input type="date" name="tanggal" id="tanggal" required value="<?php echo $edit_transaksi ? $edit_transaksi['tanggal'] : date('Y-m-d'); ?>">
                     </div>
-                    
-                    <div class="form-group">
+                      <div class="form-group">
                         <label for="keterangan">Keterangan:</label>
-                        <textarea name="keterangan" id="keterangan" rows="3"></textarea>
+                        <textarea name="keterangan" id="keterangan" rows="3"><?php echo $edit_transaksi ? htmlspecialchars($edit_transaksi['keterangan']) : ''; ?></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Simpan Transaksi</button>
+                        <label>Bukti Transaksi (Opsional):</label>
+                        <div class="image-input-container">
+                            <div class="image-input-tabs">
+                                <button type="button" class="tab-btn active" onclick="showImageTab('upload')">Upload File</button>
+                                <button type="button" class="tab-btn" onclick="showImageTab('url')">URL Gambar</button>
+                            </div>
+                            
+                            <div id="upload-tab" class="image-input-tab active">
+                                <input type="file" name="image_upload" id="image_upload" accept="image/*" onchange="previewImage(this)">
+                                <small class="help-text">Upload gambar bukti transaksi (JPEG, PNG, GIF - Max 5MB)</small>
+                            </div>
+                            
+                            <div id="url-tab" class="image-input-tab">
+                                <input type="url" name="image_url" id="image_url" placeholder="https://example.com/image.jpg" 
+                                       value="<?php echo ($edit_transaksi && filter_var($edit_transaksi['image'], FILTER_VALIDATE_URL)) ? htmlspecialchars($edit_transaksi['image']) : ''; ?>"
+                                       onchange="previewImageUrl(this)">
+                                <small class="help-text">Masukkan URL gambar dari internet</small>
+                            </div>
+                            
+                            <div id="image-preview" class="image-preview">
+                                <?php if ($edit_transaksi && !empty($edit_transaksi['image'])): ?>
+                                    <img src="<?php echo htmlspecialchars($edit_transaksi['image']); ?>" alt="Current transaction image" />
+                                    <button type="button" onclick="clearImagePreview()" class="clear-preview">×</button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary"><?php echo $edit_transaksi ? 'Update Transaksi' : 'Simpan Transaksi'; ?></button>
+                        <?php if ($edit_transaksi): ?>
+                            <a href="transaksi.php?ukm_id=<?php echo $ukm_id; ?>" class="btn btn-secondary">Batal</a>
+                        <?php endif; ?>
                     </div>
                 </form>
             </div>
@@ -162,18 +243,38 @@ foreach($ukms as $ukm) {
             <div class="transaksi-list">
                 <h2>Daftar Transaksi</h2>
                 
-                
-                <table id="transaksiTable">
+                  <table id="transaksiTable">
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th>Kategori</th>
+                            <th>Jenis</th>
+                            <th>Jumlah</th>
+                            <th>Keterangan</th>
+                            <th>Bukti</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php if(count($transaksi) > 0): ?>
-                            <?php foreach($transaksi as $t): ?>
-                                <tr class="<?php echo $t['jenis']; ?>">
+                            <?php foreach($transaksi as $t): ?>                                <tr class="<?php echo $t['jenis']; ?>">
                                     <td><?php echo date('d/m/Y', strtotime($t['tanggal'])); ?></td>
                                     <td><?php echo $t['kategori']; ?></td>
                                     <td><?php echo ucfirst($t['jenis']); ?></td>
                                     <td>Rp <?php echo number_format($t['jumlah'], 0, ',', '.'); ?></td>
                                     <td><?php echo $t['keterangan']; ?></td>
                                     <td>
+                                        <?php if (!empty($t['image'])): ?>
+                                            <img src="<?php echo htmlspecialchars($t['image']); ?>" 
+                                                 alt="Transaction image" 
+                                                 class="transaction-image" 
+                                                 onclick="showImageModal('<?php echo htmlspecialchars($t['image']); ?>')" />
+                                        <?php else: ?>
+                                            <span style="color: #999; font-style: italic;">No image</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <a href="transaksi.php?ukm_id=<?php echo $ukm_id; ?>&edit_id=<?php echo $t['id']; ?>" class="btn-edit">Edit</a>
                                         <form method="POST" action="" style="display: inline;">
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="id" value="<?php echo $t['id']; ?>">
@@ -182,15 +283,19 @@ foreach($ukms as $ukm) {
                                         </form>
                                     </td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
+                            <?php endforeach; ?>                        <?php else: ?>
                             <tr>
-                                <td colspan="6" class="no-data">Belum ada transaksi</td>
+                                <td colspan="7" class="no-data">Belum ada transaksi</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
-                </table>
-            </div>
+                </table>            </div>
+        </div>
+        
+        <!-- Image Modal -->
+        <div id="imageModal" class="image-modal">
+            <span class="close" onclick="closeImageModal()">&times;</span>
+            <img id="modalImage" alt="Transaction image" />
         </div>
         
         <script>
@@ -250,3 +355,110 @@ foreach($ukms as $ukm) {
         </section>
     </div>
 </div>
+
+<script>
+// Image input functionality
+function showImageTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.image-input-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-tab').classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+    
+    // Clear the other input
+    if (tabName === 'upload') {
+        document.getElementById('image_url').value = '';
+    } else {
+        document.getElementById('image_upload').value = '';
+    }
+    
+    clearImagePreview();
+}
+
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            preview.innerHTML = `
+                <img src="${e.target.result}" alt="Image preview" />
+                <button type="button" onclick="clearImagePreview()" class="clear-preview">×</button>
+            `;
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+        
+        // Clear URL input
+        document.getElementById('image_url').value = '';
+    }
+}
+
+function previewImageUrl(input) {
+    const preview = document.getElementById('image-preview');
+    const url = input.value.trim();
+    
+    if (url && isValidImageUrl(url)) {
+        preview.innerHTML = `
+            <img src="${url}" alt="Image preview" onerror="this.parentElement.innerHTML='<p>Error loading image</p>'" />
+            <button type="button" onclick="clearImagePreview()" class="clear-preview">×</button>
+        `;
+        
+        // Clear file input
+        document.getElementById('image_upload').value = '';
+    } else if (url) {
+        preview.innerHTML = '<p style="color: red;">Invalid image URL</p>';
+    } else {
+        clearImagePreview();
+    }
+}
+
+function clearImagePreview() {
+    document.getElementById('image-preview').innerHTML = '';
+}
+
+function isValidImageUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        const extension = urlObj.pathname.split('.').pop().toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif'].includes(extension);
+    } catch {
+        return false;
+    }
+}
+
+// Modal functionality for viewing transaction images
+function showImageModal(src) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.classList.add('show');
+    modalImg.src = src;
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.remove('show');
+}
+
+// Close modal when clicking outside the image
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeImageModal();
+            }
+        });
+    }
+});
+</script>

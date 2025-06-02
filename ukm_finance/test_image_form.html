@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Image Form Test</title>
+    <style>
+        /* Image Input Styles */
+        .image-input-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            max-width: 600px;
+            margin: 20px;
+        }
+
+        .image-input-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: #2D664A;
+            color: #2D664A;
+        }
+
+        .tab-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .image-input-tab {
+            display: none;
+        }
+
+        .image-input-tab.active {
+            display: block;
+        }
+
+        .image-input-tab input[type="file"],
+        .image-input-tab input[type="url"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .help-text {
+            color: #666;
+            font-size: 12px;
+            display: block;
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .clear-preview {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+        }
+
+        .clear-preview:hover {
+            background: rgba(255, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Upload Test</h1>
+    
+    <div class="form-group">
+        <label>Bukti Transaksi (Opsional):</label>
+        <div class="image-input-container">
+            <div class="image-input-tabs">
+                <button type="button" class="tab-btn active" onclick="showImageTab('upload')">Upload File</button>
+                <button type="button" class="tab-btn" onclick="showImageTab('url')">URL Gambar</button>
+            </div>
+            
+            <div id="upload-tab" class="image-input-tab active">
+                <input type="file" name="image_upload" id="image_upload" accept="image/*" onchange="previewImage(this)">
+                <small class="help-text">Upload gambar bukti transaksi (JPEG, PNG, GIF - Max 5MB)</small>
+            </div>
+            
+            <div id="url-tab" class="image-input-tab">
+                <input type="url" name="image_url" id="image_url" placeholder="https://example.com/image.jpg" onchange="previewImageUrl(this)">
+                <small class="help-text">Masukkan URL gambar dari internet</small>
+            </div>
+            
+            <div id="image-preview" class="image-preview">
+                <!-- Preview will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Image input functionality
+        function showImageTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.image-input-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+            
+            // Clear the other input
+            if (tabName === 'upload') {
+                document.getElementById('image_url').value = '';
+            } else {
+                document.getElementById('image_upload').value = '';
+            }
+            
+            clearImagePreview();
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('image-preview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" alt="Image preview" />
+                        <button type="button" onclick="clearImagePreview()" class="clear-preview">×</button>
+                    `;
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+                
+                // Clear URL input
+                document.getElementById('image_url').value = '';
+            }
+        }
+
+        function previewImageUrl(input) {
+            const preview = document.getElementById('image-preview');
+            const url = input.value.trim();
+            
+            if (url && isValidImageUrl(url)) {
+                preview.innerHTML = `
+                    <img src="${url}" alt="Image preview" onerror="this.parentElement.innerHTML='<p>Error loading image</p>'" />
+                    <button type="button" onclick="clearImagePreview()" class="clear-preview">×</button>
+                `;
+                
+                // Clear file input
+                document.getElementById('image_upload').value = '';
+            } else if (url) {
+                preview.innerHTML = '<p style="color: red;">Invalid image URL</p>';
+            } else {
+                clearImagePreview();
+            }
+        }
+
+        function clearImagePreview() {
+            document.getElementById('image-preview').innerHTML = '';
+        }
+
+        function isValidImageUrl(url) {
+            try {
+                const urlObj = new URL(url);
+                const extension = urlObj.pathname.split('.').pop().toLowerCase();
+                return ['jpg', 'jpeg', 'png', 'gif'].includes(extension);
+            } catch {
+                return false;
+            }
+        }
+    </script>
+</body>
+</html>

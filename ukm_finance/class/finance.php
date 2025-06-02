@@ -399,15 +399,14 @@ class Finance {
                     'status_pesan' => "Field $field harus diisi"
                 ];
             }
-        }
-
-        // Sanitize and validate data
+        }        // Sanitize and validate data
         $ukm_id = (int)$transaksi['ukm_id'];
         $jenis = mysqli_real_escape_string($this->dbConnect, strtolower($transaksi['jenis']));
         $kategori = mysqli_real_escape_string($this->dbConnect, $transaksi['kategori']);
         $jumlah = (float)$transaksi['jumlah'];
         $tanggal = mysqli_real_escape_string($this->dbConnect, $transaksi['tanggal']);
         $keterangan = isset($transaksi['keterangan']) ? mysqli_real_escape_string($this->dbConnect, $transaksi['keterangan']) : '';
+        $image = isset($transaksi['image']) ? mysqli_real_escape_string($this->dbConnect, $transaksi['image']) : '';
 
         // Validate jenis
         if (!in_array($jenis, ['pemasukan', 'pengeluaran'])) {
@@ -426,7 +425,7 @@ class Finance {
         }
 
         // Prepare statement
-        $stmt = $this->dbConnect->prepare("INSERT INTO ".$this->tblTransaksi." (ukm_id, jenis, kategori, jumlah, tanggal, keterangan) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $this->dbConnect->prepare("INSERT INTO ".$this->tblTransaksi." (ukm_id, jenis, kategori, jumlah, tanggal, keterangan, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
         if (!$stmt) {
             return [
                 'status' => 0,
@@ -434,7 +433,7 @@ class Finance {
             ];
         }
 
-        $stmt->bind_param("issdss", $ukm_id, $jenis, $kategori, $jumlah, $tanggal, $keterangan);
+        $stmt->bind_param("issdsss", $ukm_id, $jenis, $kategori, $jumlah, $tanggal, $keterangan, $image);
         
         if ($stmt->execute()) {
             $stmt->close();
@@ -503,11 +502,115 @@ class Finance {
         }
     }
 
-    // Get transactions as JSON
-    public function getTransaksiJson($ukm_id = null) {
-        $transaksiData = $this->getTransaksi($ukm_id);
-        header('Content-Type: application/json');
-        echo json_encode($transaksiData);
+    // Update transaction
+    public function updateTransaksi($id, $transaksi) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        // Validate ID
+        $id = (int)$id;
+        if ($id <= 0) {
+            return [
+                'status' => 0,
+                'status_pesan' => "ID transaksi tidak valid"
+            ];
+        }
+
+        // Validate required fields
+        $required_fields = ['ukm_id', 'jenis', 'kategori', 'jumlah', 'tanggal'];
+        foreach ($required_fields as $field) {
+            if (!isset($transaksi[$field]) || empty($transaksi[$field])) {
+                return [
+                    'status' => 0,
+                    'status_pesan' => "Field $field harus diisi"
+                ];
+            }
+        }        // Sanitize and validate data
+        $ukm_id = (int)$transaksi['ukm_id'];
+        $jenis = mysqli_real_escape_string($this->dbConnect, strtolower($transaksi['jenis']));
+        $kategori = mysqli_real_escape_string($this->dbConnect, $transaksi['kategori']);
+        $jumlah = (float)$transaksi['jumlah'];
+        $tanggal = mysqli_real_escape_string($this->dbConnect, $transaksi['tanggal']);
+        $keterangan = isset($transaksi['keterangan']) ? mysqli_real_escape_string($this->dbConnect, $transaksi['keterangan']) : '';
+        $image = isset($transaksi['image']) ? mysqli_real_escape_string($this->dbConnect, $transaksi['image']) : '';
+
+        // Validate jenis
+        if (!in_array($jenis, ['pemasukan', 'pengeluaran'])) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Jenis transaksi tidak valid"
+            ];
+        }
+
+        // Validate jumlah
+        if ($jumlah <= 0) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Jumlah harus lebih dari 0"
+            ];
+        }
+
+        // Prepare statement
+        $stmt = $this->dbConnect->prepare("UPDATE ".$this->tblTransaksi." SET ukm_id = ?, jenis = ?, kategori = ?, jumlah = ?, tanggal = ?, keterangan = ?, image = ? WHERE id = ?");
+        if (!$stmt) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Database prepare statement failed: " . $this->dbConnect->error
+            ];
+        }
+
+        $stmt->bind_param("issdsssi", $ukm_id, $jenis, $kategori, $jumlah, $tanggal, $keterangan, $image, $id);
+        
+        if ($stmt->execute()) {
+            $affected_rows = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($affected_rows > 0) {
+                return [
+                    'status' => 1,
+                    'status_pesan' => "Transaksi berhasil diupdate"
+                ];
+            } else {
+                return [
+                    'status' => 0,
+                    'status_pesan' => "Tidak ada perubahan data atau transaksi tidak ditemukan"
+                ];
+            }
+        } else {
+            $error = $stmt->error;
+            $stmt->close();
+            return [
+                'status' => 0,
+                'status_pesan' => "Gagal mengupdate transaksi: " . $error
+            ];
+        }
+    }
+
+    // Get single transaction by ID
+    public function getTransaksiById($id) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        // Validate ID
+        $id = (int)$id;
+        if ($id <= 0) {
+            return null;
+        }
+
+        $stmt = $this->dbConnect->prepare("SELECT t.*, u.nama_ukm FROM ".$this->tblTransaksi." t LEFT JOIN ".$this->tblUkm." u ON t.ukm_id = u.id WHERE t.id = ?");
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $transaksi = $result->fetch_assoc();
+        $stmt->close();
+
+        return $transaksi;
     }
 
     // User authentication
@@ -815,5 +918,79 @@ class Finance {
             ];
         }
     }
+
+    // Handle image upload
+    public function handleImageUpload($file) {
+        // Create uploads directory if it doesn't exist
+        $uploadDir = 'uploads/transactions/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        // Validate file
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+        
+        if (!in_array($file['type'], $allowedTypes)) {
+            return [
+                'status' => 0,
+                'message' => 'File type not allowed. Please upload JPEG, PNG, or GIF images only.'
+            ];
+        }
+        
+        if ($file['size'] > $maxSize) {
+            return [
+                'status' => 0,
+                'message' => 'File size too large. Maximum size is 5MB.'
+            ];
+        }
+        
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'transaction_' . time() . '_' . mt_rand(1000, 9999) . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+        
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+            return [
+                'status' => 1,
+                'message' => 'File uploaded successfully',
+                'filepath' => $filepath
+            ];
+        } else {
+            return [
+                'status' => 0,
+                'message' => 'Failed to upload file'
+            ];
+        }
+    }
+
+    // Validate image URL
+    public function validateImageUrl($url) {
+        if (empty($url)) {
+            return true; // Empty URL is valid (optional field)
+        }
+        
+        // Basic URL validation
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+        
+        // Check if URL points to an image
+        $headers = @get_headers($url, 1);
+        if (!$headers) {
+            return false;
+        }
+        
+        $contentType = isset($headers['Content-Type']) ? $headers['Content-Type'] : '';
+        if (is_array($contentType)) {
+            $contentType = $contentType[0];
+        }
+        
+        $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        return in_array(strtolower($contentType), $allowedTypes);
+    }
+
+    // ...existing code...
 }
 ?>
