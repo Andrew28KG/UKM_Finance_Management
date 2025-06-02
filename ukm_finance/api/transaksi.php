@@ -1,52 +1,114 @@
 <?php
+session_start();
+header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, DELETE");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
-require_once('../api/auth.php');
-requireApiAuth();
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
-$requestMethod = $_SERVER["REQUEST_METHOD"];
-include('../class/finance.php');
-$api = new Finance();
+require_once('../inc/auth.php');
+require_once('../class/finance.php');
 
-switch($requestMethod) {
+// Check if user is authenticated
+if (!isAuthenticated()) {
+    echo json_encode([
+        'status' => 0,
+        'status_pesan' => 'Unauthorized access'
+    ]);
+    exit();
+}
+
+$finance = new Finance();
+
+// Handle different HTTP methods
+switch ($_SERVER['REQUEST_METHOD']) {
     case 'POST':
-        // Get posted data
-        $data = json_decode(file_get_contents("php://input"), true);
+        // Add new transaction
+        $data = json_decode(file_get_contents('php://input'), true);
         
-        if(!empty($data)) {
-            $transaksiResponse = $api->tambahTransaksi($data);
-            echo json_encode($transaksiResponse);
-        } else {
-            $response = array(
-                "status" => 0,
-                "status_pesan" => "Data transaksi tidak valid"
-            );
-            echo json_encode($response);
+        // Validate required fields
+        $required_fields = ['ukm_id', 'jenis', 'kategori', 'jumlah', 'tanggal'];
+        foreach ($required_fields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                echo json_encode([
+                    'status' => 0,
+                    'status_pesan' => "Field $field is required"
+                ]);
+                exit();
+            }
+        }
+        
+        // Validate jenis
+        if (!in_array($data['jenis'], ['pemasukan', 'pengeluaran'])) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Invalid transaction type'
+            ]);
+            exit();
+        }
+        
+        // Validate jumlah
+        if (!is_numeric($data['jumlah']) || $data['jumlah'] <= 0) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Invalid amount'
+            ]);
+            exit();
+        }
+        
+        // Validate date
+        if (!strtotime($data['tanggal'])) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Invalid date format'
+            ]);
+            exit();
+        }
+        
+        try {
+            $result = $finance->tambahTransaksi($data);
+            echo json_encode($result);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Gagal menambahkan transaksi: ' . $e->getMessage()
+            ]);
         }
         break;
         
     case 'DELETE':
-        // Get transaction ID from URL
-        $transaksiId = isset($_GET['id']) ? $_GET['id'] : '';
+        // Delete transaction
+        $id = isset($_GET['id']) ? $_GET['id'] : null;
         
-        if(!empty($transaksiId)) {
-            $transaksiResponse = $api->hapusTransaksi($transaksiId);
-            echo json_encode($transaksiResponse);
-        } else {
-            $response = array(
-                "status" => 0,
-                "status_pesan" => "ID transaksi tidak ditemukan"
-            );
-            echo json_encode($response);
+        if (!$id) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Transaction ID is required'
+            ]);
+            exit();
+        }
+        
+        try {
+            $result = $finance->hapusTransaksi($id);
+            echo json_encode($result);
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => 0,
+                'status_pesan' => 'Gagal menghapus transaksi: ' . $e->getMessage()
+            ]);
         }
         break;
         
     default:
-        header("HTTP/1.0 405 Method Not Allowed");
+        echo json_encode([
+            'status' => 0,
+            'status_pesan' => 'Invalid request method'
+        ]);
         break;
 }
 ?> 

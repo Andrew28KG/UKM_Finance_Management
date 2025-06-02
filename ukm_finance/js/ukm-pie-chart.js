@@ -8,30 +8,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    try {        // Get context
+    try {
+        // Get context
         const ctx = ukmPieChartCanvas.getContext('2d');
         
         // Set canvas dimensions
         ukmPieChartCanvas.height = 280;
         
-        // Try to fetch data from API first, if it fails, use data from canvas attribute
-        fetchUkmSaldoData()
+        // Fetch data from API
+        fetchUkmData()
             .then(ukms => {
                 // Create the chart with the fetched data
                 createPieChart(ctx, ukms);
             })
             .catch(error => {
-                console.warn('Error fetching UKM saldo data from API, using embedded data:', error);
-                // Fallback to data embedded in the canvas element
-                try {
-                    const ukms = JSON.parse(ukmPieChartCanvas.getAttribute('data-ukms'));
-                    createPieChart(ctx, ukms);
-                } catch (parseError) {
-                    console.error('Error parsing embedded UKM data:', parseError);
-                    // Use dummy data as last resort
-                    const dummyData = generateDummyData();
-                    createPieChart(ctx, dummyData);
-                }
+                console.error('Error fetching UKM saldo data:', error);
+                // Show error message to user
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger';
+                errorMessage.textContent = 'Error loading chart data. Please try again later.';
+                ukmPieChartCanvas.parentNode.insertBefore(errorMessage, ukmPieChartCanvas);
             });
         
     } catch (error) {
@@ -39,33 +35,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Fetch UKM saldo data from API
-async function fetchUkmSaldoData() {
-    const response = await fetch('api/ukm_saldo.php');
-    if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data.status === 'success') {
-        return data.data;
-    } else {
-        throw new Error('API returned unsuccessful status');
-    }
-}
-
-// Generate dummy data for demonstration
-function generateDummyData() {
-    return [
-        { id: 1, nama_ukm: 'UKM Olahraga', saldo: 1500000 },
-        { id: 2, nama_ukm: 'UKM Musik', saldo: 2300000 },
-        { id: 3, nama_ukm: 'UKM Fotografi', saldo: 1800000 },
-        { id: 4, nama_ukm: 'UKM Jurnalistik', saldo: 1200000 },
-        { id: 5, nama_ukm: 'UKM Pecinta Alam', saldo: 2000000 }
-    ];
+// Fetch real data from API
+function fetchUkmData() {
+    return fetch('api/get_ukm_saldo.php')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                return data.data;
+            } else {
+                throw new Error(data.message || 'Failed to fetch UKM data');
+            }
+        });
 }
 
 // Create the pie chart
-function createPieChart(ctx, ukms) {    // Filter out UKMs with zero or negative saldo
+function createPieChart(ctx, ukms) {
+    // Filter out UKMs with zero or negative saldo
     const filteredUkms = ukms.filter(ukm => ukm.saldo > 0);
     
     // Sort by saldo (highest first) if not already sorted
@@ -96,9 +81,10 @@ function createPieChart(ctx, ukms) {    // Filter out UKMs with zero or negative
             }
         }
     }
-      // Create the chart
+    
+    // Create the chart
     const ukmPieChart = new Chart(ctx, {
-        type: 'doughnut', // Changed from pie to doughnut for better look
+        type: 'doughnut',
         data: {
             labels: filteredUkms.map(ukm => ukm.nama_ukm),
             datasets: [{
@@ -112,7 +98,7 @@ function createPieChart(ctx, ukms) {    // Filter out UKMs with zero or negative
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '50%',  // Cut out for doughnut chart
+            cutout: '50%',
             plugins: {
                 legend: {
                     position: 'right',
@@ -123,7 +109,6 @@ function createPieChart(ctx, ukms) {    // Filter out UKMs with zero or negative
                         usePointStyle: true,
                         padding: 15,
                         generateLabels: function(chart) {
-                            // Custom labels to show percentage
                             const data = chart.data;
                             if (data.labels.length && data.datasets.length) {
                                 const dataset = data.datasets[0];

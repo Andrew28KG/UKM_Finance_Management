@@ -28,49 +28,15 @@ if ($ukm_id) {
     }
 }
 
-// Dummy notification data
-$notifications = [
-    [
-        'id' => 1,
-        'title' => 'Pengajuan Dana Diterima',
-        'message' => 'Pengajuan dana untuk kegiatan Workshop Fotografi telah disetujui oleh bendahara.',
-        'date' => '2023-05-15 14:30:00',
-        'is_read' => false,
-        'type' => 'success'
-    ],
-    [
-        'id' => 2,
-        'title' => 'Transaksi Baru',
-        'message' => 'Bendahara telah menambahkan transaksi pengeluaran baru sebesar Rp. 500.000 untuk pembelian peralatan.',
-        'date' => '2023-05-12 10:15:00',
-        'is_read' => true,
-        'type' => 'info'
-    ],
-    [
-        'id' => 3,
-        'title' => 'Pengingat Pelaporan',
-        'message' => 'Jangan lupa untuk menyerahkan laporan keuangan bulanan sebelum tanggal 30 bulan ini.',
-        'date' => '2023-05-10 09:00:00',
-        'is_read' => false,
-        'type' => 'warning'
-    ],
-    [
-        'id' => 4,
-        'title' => 'Masalah Validasi Data',
-        'message' => 'Terdapat kesalahan pada data transaksi dengan ID #3421. Mohon periksa kembali.',
-        'date' => '2023-05-08 16:45:00',
-        'is_read' => true,
-        'type' => 'danger'
-    ],
-    [
-        'id' => 5,
-        'title' => 'Update Sistem',
-        'message' => 'Sistem keuangan telah diperbarui dengan fitur-fitur baru. Klik untuk melihat detail perubahan.',
-        'date' => '2023-05-05 08:30:00',
-        'is_read' => false,
-        'type' => 'info'
-    ]
-];
+// Get notifications from database
+$notifications = [];
+if ($ukm_id) {
+    try {
+        $notifications = $finance->getNotifications($_SESSION['user_id']);
+    } catch (Exception $e) {
+        error_log("Error fetching notifications: " . $e->getMessage());
+    }
+}
 
 // Mark all notifications as read (if requested)
 if (isset($_GET['mark_all_read'])) {

@@ -1,204 +1,126 @@
 <?php
 class Finance {
     private $host = 'localhost';
-    private $user = 'root'; // Change this to your database username
-    private $pass = ''; // Change this to your database password
+    private $user = 'root'; // Default XAMPP username
+    private $pass = ''; // Default XAMPP password is empty
     private $database = "ukm_finance";
     private $tblTransaksi = 'transaksi';
     private $tblUkm = 'ukm';
     private $tblUser = 'users';
-    private $dbConnect = false;    public function __construct() {
+    private $dbConnect = false;
+
+    public function __construct() {
         if(!$this->dbConnect) {
-            $conn = new mysqli($this->host, $this->user, $this->pass, $this->database);
-            if($conn->connect_error) {
-                die("Error failed to connect to MySQL: " . $conn->connect_error);
-            } else {
+            try {
+                $conn = new mysqli($this->host, $this->user, $this->pass, $this->database);
+                if($conn->connect_error) {
+                    error_log("Database connection failed: " . $conn->connect_error);
+                    throw new Exception("Database connection failed: " . $conn->connect_error);
+                }
                 $this->dbConnect = $conn;
+            } catch (Exception $e) {
+                error_log("Database connection error: " . $e->getMessage());
+                throw new Exception("Database connection error: " . $e->getMessage());
             }
         }
     }
     
     // Get database connection for testing
     public function getConnection() {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
         return $this->dbConnect;
     }
 
     // Get all transactions
     public function getTransaksi($ukm_id = null, $limit = null) {
-        if(isset($_SESSION['preview_mode'])) {
-            return $this->getPreviewTransaksi($ukm_id, $limit);
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
         }
 
-        $whereClause = "";
-        if($ukm_id) {
-            $whereClause = " WHERE ukm_id = '$ukm_id'";
-        }
-        
-        $limitClause = "";
-        if($limit) {
-            $limitClause = " LIMIT " . (int)$limit;
-        }
-        
         $sqlQuery = "SELECT t.*, u.nama_ukm 
                     FROM ".$this->tblTransaksi." t
-                    LEFT JOIN ".$this->tblUkm." u ON t.ukm_id = u.id
-                    $whereClause
-                    ORDER BY t.tanggal DESC
-                    $limitClause";
-
-        $result = mysqli_query($this->dbConnect, $sqlQuery);
-
-        if(!$result) {
-            die('Error in query: '. mysqli_error($this->dbConnect));
+                    LEFT JOIN ".$this->tblUkm." u ON t.ukm_id = u.id";
+        
+        $params = [];
+        $types = "";
+        
+        if($ukm_id) {
+            $sqlQuery .= " WHERE t.ukm_id = ?";
+            $params[] = (int)$ukm_id;
+            $types .= "i";
         }
         
-        $transaksiData = array();
-        while($transaksiRecord = mysqli_fetch_assoc($result)) {
+        $sqlQuery .= " ORDER BY t.tanggal DESC";
+        
+        if($limit) {
+            $sqlQuery .= " LIMIT ?";
+            $params[] = (int)$limit;
+            $types .= "i";
+        }
+
+        $stmt = $this->dbConnect->prepare($sqlQuery);
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        if (!$stmt->execute()) {
+            $error = $stmt->error;
+            $stmt->close();
+            throw new Exception("Failed to execute query: " . $error);
+        }
+
+        $result = $stmt->get_result();
+        $transaksiData = [];
+        
+        while($transaksiRecord = $result->fetch_assoc()) {
             $transaksiData[] = $transaksiRecord;
         }
         
+        $stmt->close();
         return $transaksiData;
     }
 
-    // Get preview transactions
-    private function getPreviewTransaksi($ukm_id = null, $limit = null) {
-        $sampleData = [
-            [
-                'id' => 1,
-                'ukm_id' => $ukm_id,
-                'nama_ukm' => 'Sample UKM',
-                'jenis' => 'Pemasukan',
-                'kategori' => 'Iuran Anggota',
-                'jumlah' => 500000,
-                'tanggal' => date('Y-m-d'),
-                'keterangan' => 'Iuran bulanan anggota'
-            ],
-            [
-                'id' => 2,
-                'ukm_id' => $ukm_id,
-                'nama_ukm' => 'Sample UKM',
-                'jenis' => 'Pengeluaran',
-                'kategori' => 'Konsumsi',
-                'jumlah' => 200000,
-                'tanggal' => date('Y-m-d', strtotime('-1 day')),
-                'keterangan' => 'Konsumsi rapat mingguan'
-            ],
-            [
-                'id' => 3,
-                'ukm_id' => $ukm_id,
-                'nama_ukm' => 'Sample UKM',
-                'jenis' => 'Pemasukan',
-                'kategori' => 'Sponsorship',
-                'jumlah' => 1000000,
-                'tanggal' => date('Y-m-d', strtotime('-2 day')),
-                'keterangan' => 'Sponsor dari PT XYZ'
-            ],
-            [
-                'id' => 4,
-                'ukm_id' => $ukm_id,
-                'nama_ukm' => 'Sample UKM',
-                'jenis' => 'Pengeluaran',
-                'kategori' => 'Peralatan',
-                'jumlah' => 350000,
-                'tanggal' => date('Y-m-d', strtotime('-3 day')),
-                'keterangan' => 'Pembelian alat tulis'
-            ],
-            [
-                'id' => 5,
-                'ukm_id' => $ukm_id,
-                'nama_ukm' => 'Sample UKM',
-                'jenis' => 'Pengeluaran',
-                'kategori' => 'Transportasi',
-                'jumlah' => 150000,
-                'tanggal' => date('Y-m-d', strtotime('-4 day')),
-                'keterangan' => 'Transportasi kunjungan'
-            ]
-        ];
-        
-        if($limit && $limit < count($sampleData)) {
-            return array_slice($sampleData, 0, $limit);
-        }
-        
-        return $sampleData;
-    }
-
-    // Get transactions as JSON
-    public function getTransaksiJson($ukm_id = null) {
-        $transaksiData = $this->getTransaksi($ukm_id);
-        header('Content-Type: application/json');
-        echo json_encode($transaksiData);
-    }
-
-    // Add new transaction
-    public function tambahTransaksi($transaksi) {
-        $ukm_id = $transaksi['ukm_id'];
-        $jenis = $transaksi['jenis'];
-        $kategori = $transaksi['kategori'];
-        $jumlah = $transaksi['jumlah'];
-        $tanggal = $transaksi['tanggal'];
-        $keterangan = $transaksi['keterangan'];
-        
-        $sqlQuery = "INSERT INTO ".$this->tblTransaksi." 
-                    SET ukm_id = '$ukm_id',
-                        jenis = '$jenis',
-                        kategori = '$kategori',
-                        jumlah = '$jumlah',
-                        tanggal = '$tanggal',
-                        keterangan = '$keterangan'";
-        
-        if(mysqli_query($this->dbConnect, $sqlQuery)) {
-            $pesan = "Transaksi berhasil ditambahkan.";
-            $status = 1;
-        } else {
-            $pesan = "Gagal menambahkan transaksi: " . mysqli_error($this->dbConnect);
-            $status = 0;
-        }
-        
-        $transaksiResponse = array(
-            'status' => $status,
-            'status_pesan' => $pesan
-        );
-        
-        return $transaksiResponse;
-    }
-
-    // Delete transaction
-    public function hapusTransaksi($id) {
-        $sqlQuery = "DELETE FROM ".$this->tblTransaksi." WHERE id = '$id'";
-        
-        if(mysqli_query($this->dbConnect, $sqlQuery)) {
-            $pesan = "Transaksi berhasil dihapus.";
-            $status = 1;
-        } else {
-            $pesan = "Gagal menghapus transaksi: " . mysqli_error($this->dbConnect);
-            $status = 0;
-        }
-        
-        $transaksiResponse = array(
-            'status' => $status,
-            'status_pesan' => $pesan
-        );
-        
-        return $transaksiResponse;
-    }
-
     // Get summary of transactions
-    public function getLaporanKeuangan($ukm_id) {
-        if(isset($_SESSION['preview_mode'])) {
-            return $this->getPreviewLaporan($ukm_id);
+    public function getLaporanKeuangan($ukm_id, $month = null) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        $whereClause = "WHERE ukm_id = ?";
+        $params = [$ukm_id];
+        $types = "i";
+
+        if ($month) {
+            $whereClause .= " AND DATE_FORMAT(tanggal, '%Y-%m') = ?";
+            $params[] = $month;
+            $types .= "s";
         }
 
         // Get total income
         $sqlPemasukan = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
-                        WHERE ukm_id = '$ukm_id' AND jenis = 'pemasukan'";
-        $resultPemasukan = mysqli_query($this->dbConnect, $sqlPemasukan);
-        $pemasukan = mysqli_fetch_assoc($resultPemasukan)['total'] ?: 0;
+                        $whereClause AND jenis = 'pemasukan'";
+        $stmt = $this->dbConnect->prepare($sqlPemasukan);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $resultPemasukan = $stmt->get_result();
+        $pemasukan = $resultPemasukan->fetch_assoc()['total'] ?: 0;
+        $stmt->close();
         
         // Get total expense
         $sqlPengeluaran = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
-                          WHERE ukm_id = '$ukm_id' AND jenis = 'pengeluaran'";
-        $resultPengeluaran = mysqli_query($this->dbConnect, $sqlPengeluaran);
-        $pengeluaran = mysqli_fetch_assoc($resultPengeluaran)['total'] ?: 0;
+                          $whereClause AND jenis = 'pengeluaran'";
+        $stmt = $this->dbConnect->prepare($sqlPengeluaran);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $resultPengeluaran = $stmt->get_result();
+        $pengeluaran = $resultPengeluaran->fetch_assoc()['total'] ?: 0;
+        $stmt->close();
         
         // Get balance
         $saldo = $pemasukan - $pengeluaran;
@@ -206,14 +128,18 @@ class Finance {
         // Get transactions by category
         $sqlKategori = "SELECT kategori, SUM(jumlah) as total 
                        FROM ".$this->tblTransaksi." 
-                       WHERE ukm_id = '$ukm_id'
+                       $whereClause
                        GROUP BY kategori";
-        $resultKategori = mysqli_query($this->dbConnect, $sqlKategori);
+        $stmt = $this->dbConnect->prepare($sqlKategori);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $resultKategori = $stmt->get_result();
         
         $kategoriData = array();
-        while($kategori = mysqli_fetch_assoc($resultKategori)) {
+        while($kategori = $resultKategori->fetch_assoc()) {
             $kategoriData[] = $kategori;
         }
+        $stmt->close();
         
         $laporan = array(
             'pemasukan' => $pemasukan,
@@ -225,41 +151,12 @@ class Finance {
         return $laporan;
     }
 
-    // Get preview financial report
-    private function getPreviewLaporan($ukm_id) {
-        $sampleData = [
-            'pemasukan' => 1500000,
-            'pengeluaran' => 200000,
-            'saldo' => 1300000,
-            'kategori' => [
-                [
-                    'kategori' => 'Iuran Anggota',
-                    'total' => 500000
-                ],
-                [
-                    'kategori' => 'Sponsorship',
-                    'total' => 1000000
-                ],
-                [
-                    'kategori' => 'Konsumsi',
-                    'total' => 200000
-                ]
-            ]
-        ];
-        
-        return $sampleData;
-    }    // Get all UKM saldo/balances
+    // Get all UKM saldo/balances
     public function getAllUkmSaldo() {
-        if(isset($_SESSION['preview_mode'])) {
-            return [
-                ['id' => 1, 'nama_ukm' => 'UKM Olahraga', 'saldo' => 1500000],
-                ['id' => 2, 'nama_ukm' => 'UKM Musik', 'saldo' => 2300000],
-                ['id' => 3, 'nama_ukm' => 'UKM Fotografi', 'saldo' => 1800000],
-                ['id' => 4, 'nama_ukm' => 'UKM Jurnalistik', 'saldo' => 1200000],
-                ['id' => 5, 'nama_ukm' => 'UKM Pecinta Alam', 'saldo' => 2000000]
-            ];
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
         }
-        
+
         // Get all UKMs
         $ukms = $this->getUkm();
         $result = [];
@@ -270,15 +167,23 @@ class Finance {
             
             // Get total income
             $sqlPemasukan = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
-                          WHERE ukm_id = '$ukm_id' AND jenis = 'pemasukan'";
-            $resultPemasukan = mysqli_query($this->dbConnect, $sqlPemasukan);
-            $pemasukan = mysqli_fetch_assoc($resultPemasukan)['total'] ?: 0;
+                          WHERE ukm_id = ? AND jenis = 'pemasukan'";
+            $stmt = $this->dbConnect->prepare($sqlPemasukan);
+            $stmt->bind_param("i", $ukm_id);
+            $stmt->execute();
+            $resultPemasukan = $stmt->get_result();
+            $pemasukan = $resultPemasukan->fetch_assoc()['total'] ?: 0;
+            $stmt->close();
             
             // Get total expense
             $sqlPengeluaran = "SELECT SUM(jumlah) as total FROM ".$this->tblTransaksi." 
-                            WHERE ukm_id = '$ukm_id' AND jenis = 'pengeluaran'";
-            $resultPengeluaran = mysqli_query($this->dbConnect, $sqlPengeluaran);
-            $pengeluaran = mysqli_fetch_assoc($resultPengeluaran)['total'] ?: 0;
+                            WHERE ukm_id = ? AND jenis = 'pengeluaran'";
+            $stmt = $this->dbConnect->prepare($sqlPengeluaran);
+            $stmt->bind_param("i", $ukm_id);
+            $stmt->execute();
+            $resultPengeluaran = $stmt->get_result();
+            $pengeluaran = $resultPengeluaran->fetch_assoc()['total'] ?: 0;
+            $stmt->close();
             
             // Calculate balance
             $saldo = $pemasukan - $pengeluaran;
@@ -295,71 +200,360 @@ class Finance {
     
     // Get UKM list
     public function getUkm() {
-        if(isset($_SESSION['preview_mode'])) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        try {
+            $sqlQuery = "SELECT * FROM ".$this->tblUkm." ORDER BY nama_ukm";
+            $result = $this->dbConnect->query($sqlQuery);
+            
+            if(!$result) {
+                throw new Exception("Error in query: ". $this->dbConnect->error);
+            }
+            
+            $ukmData = array();
+            while($ukmRecord = $result->fetch_assoc()) {
+                $ukmData[] = $ukmRecord;
+            }
+            
+            return $ukmData;
+        } catch (Exception $e) {
+            error_log("Error in getUkm: " . $e->getMessage());
+            throw new Exception("Failed to get UKM list: " . $e->getMessage());
+        }
+    }
+
+    // Get timeline data for income and expenses over time
+    public function getTimelineData($ukm_id = null, $time_range = 'month') {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+        
+        // Set time constraints based on time_range
+        $timeConstraint = '';
+        $groupBy = '';
+        $now = date('Y-m-d');
+        
+        switch($time_range) {
+            case 'day':
+                // Last 7 days
+                $startDate = date('Y-m-d', strtotime('-6 days'));
+                $timeConstraint = " AND t.tanggal >= ? AND t.tanggal <= ?";
+                $groupBy = "DATE(t.tanggal)";
+                break;
+                
+            case 'week':
+                // Last 8 weeks
+                $startDate = date('Y-m-d', strtotime('-7 weeks'));
+                $timeConstraint = " AND t.tanggal >= ? AND t.tanggal <= ?";
+                $groupBy = "YEARWEEK(t.tanggal, 1)";
+                break;
+                
+            case 'month':
+            default:
+                // Last 12 months
+                $startDate = date('Y-m-d', strtotime('-11 months'));
+                $timeConstraint = " AND t.tanggal >= ? AND t.tanggal <= ?";
+                $groupBy = "YEAR(t.tanggal), MONTH(t.tanggal)";
+                break;
+        }
+        
+        $whereClause = "WHERE 1=1";
+        if($ukm_id) {
+            $whereClause .= " AND t.ukm_id = ?";
+        }
+        
+        // Query for pemasukan (income)
+        $sqlPemasukan = "SELECT 
+                            $groupBy as period,
+                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
+                            SUM(t.jumlah) as total 
+                        FROM ".$this->tblTransaksi." t 
+                        $whereClause 
+                        AND t.jenis = 'pemasukan' 
+                        $timeConstraint 
+                        GROUP BY $groupBy 
+                        ORDER BY t.tanggal ASC";
+        
+        // Query for pengeluaran (expense)
+        $sqlPengeluaran = "SELECT 
+                            $groupBy as period,
+                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
+                            SUM(t.jumlah) as total 
+                        FROM ".$this->tblTransaksi." t 
+                        $whereClause 
+                        AND t.jenis = 'pengeluaran' 
+                        $timeConstraint 
+                        GROUP BY $groupBy 
+                        ORDER BY t.tanggal ASC";
+        
+        $stmt = $this->dbConnect->prepare($sqlPemasukan);
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+
+        // Bind parameters
+        $params = [];
+        $types = "";
+        if($ukm_id) {
+            $params[] = $ukm_id;
+            $types .= "i";
+        }
+        $params[] = $startDate;
+        $params[] = $now;
+        $types .= "ss";
+
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $resultPemasukan = $stmt->get_result();
+        $stmt->close();
+
+        $stmt = $this->dbConnect->prepare($sqlPengeluaran);
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $resultPengeluaran = $stmt->get_result();
+        $stmt->close();
+        
+        $pemasukanData = [];
+        $pengeluaranData = [];
+        $labels = [];
+        
+        // Process pemasukan data
+        while($row = $resultPemasukan->fetch_assoc()) {
+            $date = new DateTime($row['date_start']);
+            
+            if($time_range == 'day') {
+                $label = $date->format('d M');
+            } else if($time_range == 'week') {
+                $weekNumber = $date->format('W');
+                $label = 'W' . $weekNumber;
+            } else {
+                $label = $date->format('M y');
+            }
+            
+            if(!in_array($label, $labels)) {
+                $labels[] = $label;
+            }
+            
+            $pemasukanData[$label] = (int)$row['total'];
+        }
+        
+        // Process pengeluaran data
+        while($row = $resultPengeluaran->fetch_assoc()) {
+            $date = new DateTime($row['date_start']);
+            
+            if($time_range == 'day') {
+                $label = $date->format('d M');
+            } else if($time_range == 'week') {
+                $weekNumber = $date->format('W');
+                $label = 'W' . $weekNumber;
+            } else {
+                $label = $date->format('M y');
+            }
+            
+            if(!in_array($label, $labels)) {
+                $labels[] = $label;
+            }
+            
+            $pengeluaranData[$label] = (int)$row['total'];
+        }
+        
+        // Prepare final arrays
+        $pemasukanValues = [];
+        $pengeluaranValues = [];
+        
+        foreach($labels as $label) {
+            $pemasukanValues[] = isset($pemasukanData[$label]) ? $pemasukanData[$label] : 0;
+            $pengeluaranValues[] = isset($pengeluaranData[$label]) ? $pengeluaranData[$label] : 0;
+        }
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode([
+            'status' => 'success',
+            'labels' => $labels,
+            'pemasukan' => $pemasukanValues,
+            'pengeluaran' => $pengeluaranValues,
+            'time_range' => $time_range
+        ]);
+        exit;
+    }
+
+    // Add new transaction
+    public function tambahTransaksi($transaksi) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        // Validate required fields
+        $required_fields = ['ukm_id', 'jenis', 'kategori', 'jumlah', 'tanggal'];
+        foreach ($required_fields as $field) {
+            if (!isset($transaksi[$field]) || empty($transaksi[$field])) {
+                return [
+                    'status' => 0,
+                    'status_pesan' => "Field $field harus diisi"
+                ];
+            }
+        }
+
+        // Sanitize and validate data
+        $ukm_id = (int)$transaksi['ukm_id'];
+        $jenis = mysqli_real_escape_string($this->dbConnect, strtolower($transaksi['jenis']));
+        $kategori = mysqli_real_escape_string($this->dbConnect, $transaksi['kategori']);
+        $jumlah = (float)$transaksi['jumlah'];
+        $tanggal = mysqli_real_escape_string($this->dbConnect, $transaksi['tanggal']);
+        $keterangan = isset($transaksi['keterangan']) ? mysqli_real_escape_string($this->dbConnect, $transaksi['keterangan']) : '';
+
+        // Validate jenis
+        if (!in_array($jenis, ['pemasukan', 'pengeluaran'])) {
             return [
-                [
-                    'id' => 1,
-                    'nama_ukm' => 'Sample UKM'
-                ]
+                'status' => 0,
+                'status_pesan' => "Jenis transaksi tidak valid"
             ];
         }
 
-        $sqlQuery = "SELECT * FROM ".$this->tblUkm." ORDER BY nama_ukm";
-        $result = mysqli_query($this->dbConnect, $sqlQuery);
-        
-        if(!$result) {
-            die('Error in query: '. mysqli_error($this->dbConnect));
+        // Validate jumlah
+        if ($jumlah <= 0) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Jumlah harus lebih dari 0"
+            ];
         }
-        
-        $ukmData = array();
-        while($ukmRecord = mysqli_fetch_assoc($result)) {
-            $ukmData[] = $ukmRecord;
+
+        // Prepare statement
+        $stmt = $this->dbConnect->prepare("INSERT INTO ".$this->tblTransaksi." (ukm_id, jenis, kategori, jumlah, tanggal, keterangan) VALUES (?, ?, ?, ?, ?, ?)");
+        if (!$stmt) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Database prepare statement failed: " . $this->dbConnect->error
+            ];
         }
+
+        $stmt->bind_param("issdss", $ukm_id, $jenis, $kategori, $jumlah, $tanggal, $keterangan);
         
-        return $ukmData;
+        if ($stmt->execute()) {
+            $stmt->close();
+            return [
+                'status' => 1,
+                'status_pesan' => "Transaksi berhasil ditambahkan"
+            ];
+        } else {
+            $error = $stmt->error;
+            $stmt->close();
+            return [
+                'status' => 0,
+                'status_pesan' => "Gagal menambahkan transaksi: " . $error
+            ];
+        }
+    }
+
+    // Delete transaction
+    public function hapusTransaksi($id) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        // Validate ID
+        $id = (int)$id;
+        if ($id <= 0) {
+            return [
+                'status' => 0,
+                'status_pesan' => "ID transaksi tidak valid"
+            ];
+        }
+
+        // Prepare statement
+        $stmt = $this->dbConnect->prepare("DELETE FROM ".$this->tblTransaksi." WHERE id = ?");
+        if (!$stmt) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Database prepare statement failed: " . $this->dbConnect->error
+            ];
+        }
+
+        $stmt->bind_param("i", $id);
+        
+        if ($stmt->execute()) {
+            $affected_rows = $stmt->affected_rows;
+            $stmt->close();
+            
+            if ($affected_rows > 0) {
+                return [
+                    'status' => 1,
+                    'status_pesan' => "Transaksi berhasil dihapus"
+                ];
+            } else {
+                return [
+                    'status' => 0,
+                    'status_pesan' => "Transaksi tidak ditemukan"
+                ];
+            }
+        } else {
+            $error = $stmt->error;
+            $stmt->close();
+            return [
+                'status' => 0,
+                'status_pesan' => "Gagal menghapus transaksi: " . $error
+            ];
+        }
+    }
+
+    // Get transactions as JSON
+    public function getTransaksiJson($ukm_id = null) {
+        $transaksiData = $this->getTransaksi($ukm_id);
+        header('Content-Type: application/json');
+        echo json_encode($transaksiData);
     }
 
     // User authentication
     public function userLogin($email, $password) {
-        // Look up user by email using direct query
-        $sqlQuery = "SELECT * FROM ".$this->tblUser." WHERE email = '".mysqli_real_escape_string($this->dbConnect, $email)."' LIMIT 1";
-        $directResult = mysqli_query($this->dbConnect, $sqlQuery);
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        // Sanitize email input
+        $email = mysqli_real_escape_string($this->dbConnect, $email);
         
-        if ($directResult && mysqli_num_rows($directResult) > 0) {
-            $user = mysqli_fetch_assoc($directResult);
+        // Prepare statement for better security
+        $stmt = $this->dbConnect->prepare("SELECT * FROM ".$this->tblUser." WHERE email = ? LIMIT 1");
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+        
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result && $result->num_rows > 0) {
+            $user = $result->fetch_assoc();
             
-            // For the test users in ukm_finance.sql, password is 'password123'
-            // Try different password verification methods in order of security
+            // For development/testing: allow login with password123 for any user
+            if ($password === 'password123') {
+                $stmt->close();
+                return $user;
+            }
             
-            // 1. Try bcrypt (password_verify) - most secure
+            // For production: use password_verify
             if (password_verify($password, $user['password'])) {
-                return $user;
-            }
-            
-            // 2. Try plain text comparison as a fallback for test accounts
-            if ($password === $user['password'] || $password === 'password123') {
-                // In production, you should upgrade the password here to a secure hash
-                return $user;
-            }
-            
-            // 3. Try MD5 (older systems)
-            if (md5($password) === $user['password']) {
-                return $user;
-            }
-            
-            // 4. Try SHA1 (older systems)
-            if (sha1($password) === $user['password']) {
+                $stmt->close();
                 return $user;
             }
         }
         
+        $stmt->close();
         return false;
     }
 
     // Create XML file
     function createXMLfile($transaksiArray) {
-        $filePath = 'transaksi.xml';
+        $filePath = 'api/transaksi.xml';
         $dom = new DOMDocument('1.0', 'utf-8');
+        $dom->formatOutput = true;
         $root = $dom->createElement('ukmFinance');
         
         for($i=0; $i<count($transaksiArray); $i++) {
@@ -409,198 +603,217 @@ class Finance {
             $this->createXMLfile($transaksiArray);
         }
     }
-    
-    // Get timeline data for income and expenses over time
-    public function getTimelineData($ukm_id = null, $time_range = 'month') {
-        if(isset($_SESSION['preview_mode'])) {
-            return $this->getPreviewTimelineData($ukm_id, $time_range);
+
+    // Get notifications for a user
+    public function getNotifications($user_id, $limit = null) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
         }
-        
-        // Set time constraints based on time_range
-        $timeConstraint = '';
-        $groupBy = '';
-        $now = date('Y-m-d');
-        
-        switch($time_range) {
-            case 'day':
-                // Last 7 days
-                $startDate = date('Y-m-d', strtotime('-6 days'));
-                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
-                $groupBy = "DATE(t.tanggal)";
-                break;
-                
-            case 'week':
-                // Last 8 weeks
-                $startDate = date('Y-m-d', strtotime('-7 weeks'));
-                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
-                $groupBy = "YEARWEEK(t.tanggal, 1)";
-                break;
-                
-            case 'month':
-            default:
-                // Last 12 months
-                $startDate = date('Y-m-d', strtotime('-11 months'));
-                $timeConstraint = " AND t.tanggal >= '$startDate' AND t.tanggal <= '$now'";
-                $groupBy = "YEAR(t.tanggal), MONTH(t.tanggal)";
-                break;
+
+        $sqlQuery = "SELECT * FROM notifications WHERE user_id = ? ORDER BY date DESC";
+        if ($limit) {
+            $sqlQuery .= " LIMIT " . (int)$limit;
         }
-        
-        $whereClause = "WHERE 1=1";
-        if($ukm_id) {
-            $whereClause .= " AND t.ukm_id = '$ukm_id'";
+
+        $stmt = $this->dbConnect->prepare($sqlQuery);
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
         }
-        
-        // Query for pemasukan (income)
-        $sqlPemasukan = "SELECT 
-                            $groupBy as period,
-                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
-                            SUM(t.jumlah) as total 
-                        FROM ".$this->tblTransaksi." t 
-                        $whereClause 
-                        AND t.jenis = 'pemasukan' 
-                        $timeConstraint 
-                        GROUP BY $groupBy 
-                        ORDER BY t.tanggal ASC";
-        
-        // Query for pengeluaran (expense)
-        $sqlPengeluaran = "SELECT 
-                            $groupBy as period,
-                            DATE_FORMAT(MIN(t.tanggal), '%Y-%m-%d') as date_start,
-                            SUM(t.jumlah) as total 
-                        FROM ".$this->tblTransaksi." t 
-                        $whereClause 
-                        AND t.jenis = 'pengeluaran' 
-                        $timeConstraint 
-                        GROUP BY $groupBy 
-                        ORDER BY t.tanggal ASC";
-        
-        $resultPemasukan = mysqli_query($this->dbConnect, $sqlPemasukan);
-        $resultPengeluaran = mysqli_query($this->dbConnect, $sqlPengeluaran);
-        
-        if(!$resultPemasukan || !$resultPengeluaran) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Database query error: ' . mysqli_error($this->dbConnect)
-            ]);
-            exit;
+
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $notifications = array();
+        while ($row = $result->fetch_assoc()) {
+            $notifications[] = $row;
         }
-        
-        $pemasukanData = [];
-        $pengeluaranData = [];
-        $labels = [];
-        
-        // Process pemasukan data
-        while($row = mysqli_fetch_assoc($resultPemasukan)) {
-            $date = new DateTime($row['date_start']);
-            
-            if($time_range == 'day') {
-                $label = $date->format('d M');
-            } else if($time_range == 'week') {
-                $weekNumber = $date->format('W');
-                $label = 'W' . $weekNumber;
-            } else {
-                $label = $date->format('M y');
-            }
-            
-            if(!in_array($label, $labels)) {
-                $labels[] = $label;
-            }
-            
-            $pemasukanData[$label] = (int)$row['total'];
-        }
-        
-        // Process pengeluaran data
-        while($row = mysqli_fetch_assoc($resultPengeluaran)) {
-            $date = new DateTime($row['date_start']);
-            
-            if($time_range == 'day') {
-                $label = $date->format('d M');
-            } else if($time_range == 'week') {
-                $weekNumber = $date->format('W');
-                $label = 'W' . $weekNumber;
-            } else {
-                $label = $date->format('M y');
-            }
-            
-            if(!in_array($label, $labels)) {
-                $labels[] = $label;
-            }
-            
-            $pengeluaranData[$label] = (int)$row['total'];
-        }
-        
-        // Prepare final arrays
-        $pemasukanValues = [];
-        $pengeluaranValues = [];
-        
-        foreach($labels as $label) {
-            $pemasukanValues[] = isset($pemasukanData[$label]) ? $pemasukanData[$label] : 0;
-            $pengeluaranValues[] = isset($pengeluaranData[$label]) ? $pengeluaranData[$label] : 0;
-        }
-        
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'success',
-            'labels' => $labels,
-            'pemasukan' => $pemasukanValues,
-            'pengeluaran' => $pengeluaranValues,
-            'time_range' => $time_range
-        ]);
-        exit;
+
+        $stmt->close();
+        return $notifications;
     }
-    
-    // Generate mock timeline data for preview mode
-    private function getPreviewTimelineData($ukm_id = null, $time_range = 'month') {
-        $labels = [];
-        $pemasukanValues = [];
-        $pengeluaranValues = [];
+
+    // Get pending requests for a UKM
+    public function getPendingRequests($ukm_id, $limit = null) {
+        if (!$this->dbConnect) {
+            throw new Exception("Database connection not established");
+        }
+
+        $sqlQuery = "SELECT * FROM requests WHERE ukm_id = ? AND status = 'pending' ORDER BY request_date DESC";
+        if ($limit) {
+            $sqlQuery .= " LIMIT " . (int)$limit;
+        }
+
+        $stmt = $this->dbConnect->prepare($sqlQuery);
+        if (!$stmt) {
+            throw new Exception("Database prepare statement failed: " . $this->dbConnect->error);
+        }
+
+        $stmt->bind_param("i", $ukm_id);
         
-        switch($time_range) {
-            case 'day':
-                // Last 7 days
-                for($i = 6; $i >= 0; $i--) {
-                    $date = date('d M', strtotime("-$i days"));
-                    $labels[] = $date;
-                    $pemasukanValues[] = rand(100000, 500000);
-                    $pengeluaranValues[] = rand(80000, 400000);
-                }
-                break;
-                
-            case 'week':
-                // Last 8 weeks
-                for($i = 7; $i >= 0; $i--) {
-                    $weekNumber = date('W', strtotime("-$i weeks"));
-                    $labels[] = 'W' . $weekNumber;
-                    $pemasukanValues[] = rand(500000, 2000000);
-                    $pengeluaranValues[] = rand(400000, 1800000);
-                }
-                break;
-                
-            case 'month':
-            default:
-                // Last 12 months
-                for($i = 11; $i >= 0; $i--) {
-                    $month = date('M y', strtotime("-$i months"));
-                    $labels[] = $month;
-                    $pemasukanValues[] = rand(2000000, 8000000);
-                    $pengeluaranValues[] = rand(1500000, 7000000);
-                }
-                break;
+        if (!$stmt->execute()) {
+            $error = $stmt->error;
+            $stmt->close();
+            throw new Exception("Failed to execute query: " . $error);
+        }
+
+        $result = $stmt->get_result();
+
+        $requests = array();
+        while ($row = $result->fetch_assoc()) {
+            $requests[] = $row;
+        }
+
+        $stmt->close();
+        return $requests;
+    }
+
+    // Get period-over-period changes for financial metrics
+    public function getPeriodChanges($ukm_id) {
+        $current_month = date('Y-m');
+        $previous_month = date('Y-m', strtotime('-1 month'));
+        
+        $current_data = $this->getLaporanKeuangan($ukm_id, $current_month);
+        $previous_data = $this->getLaporanKeuangan($ukm_id, $previous_month);
+        
+        $changes = [
+            'pemasukan' => [
+                'current' => $current_data['pemasukan'],
+                'previous' => $previous_data['pemasukan'],
+                'change' => 0,
+                'percentage' => 0
+            ],
+            'pengeluaran' => [
+                'current' => $current_data['pengeluaran'],
+                'previous' => $previous_data['pengeluaran'],
+                'change' => 0,
+                'percentage' => 0
+            ],
+            'saldo' => [
+                'current' => $current_data['saldo'],
+                'previous' => $previous_data['saldo'],
+                'change' => 0,
+                'percentage' => 0
+            ]
+        ];
+        
+        // Calculate changes
+        foreach ($changes as $key => &$value) {
+            $value['change'] = $value['current'] - $value['previous'];
+            
+            // Calculate percentage change only if previous value is not zero
+            if ($value['previous'] != 0) {
+                $value['percentage'] = ($value['change'] / $value['previous']) * 100;
+            } else if ($value['current'] > 0) {
+                // If previous was zero and current is positive, it's a 100% increase
+                $value['percentage'] = 100;
+            } else if ($value['current'] < 0) {
+                // If previous was zero and current is negative, it's a -100% decrease
+                $value['percentage'] = -100;
+            }
+            // If both current and previous are zero, percentage remains 0
         }
         
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode([
-            'status' => 'success',
-            'labels' => $labels,
-            'pemasukan' => $pemasukanValues,
-            'pengeluaran' => $pengeluaranValues,
-            'time_range' => $time_range,
-            'preview' => true
-        ]);
-        exit;
+        return $changes;
+    }
+
+    public function getUkmSettings($ukm_id) {
+        try {
+            $stmt = $this->dbConnect->prepare("SELECT * FROM settings WHERE ukm_id = ?");
+            $stmt->bind_param("i", $ukm_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows > 0) {
+                return $result->fetch_assoc();
+            }
+            
+            // If no settings exist, create default settings
+            $stmt = $this->dbConnect->prepare("INSERT INTO settings (ukm_id) VALUES (?)");
+            $stmt->bind_param("i", $ukm_id);
+            $stmt->execute();
+            
+            // Return the newly created settings
+            $stmt = $this->dbConnect->prepare("SELECT * FROM settings WHERE ukm_id = ?");
+            $stmt->bind_param("i", $ukm_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            return $result->fetch_assoc();
+            
+        } catch (Exception $e) {
+            error_log("Error in getUkmSettings: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Create a new UKM
+    public function createUkm($ukmName) {
+        if (!$this->dbConnect) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Database connection not established"
+            ];
+        }
+
+        // Validate UKM name
+        if (empty($ukmName)) {
+            return [
+                'status' => 0,
+                'status_pesan' => "Nama UKM tidak boleh kosong"
+            ];
+        }
+
+        // Sanitize input
+        $ukmName = mysqli_real_escape_string($this->dbConnect, $ukmName);
+
+        // Check if UKM name already exists (optional, but good practice)
+        $checkSql = "SELECT id FROM ".$this->tblUkm." WHERE nama_ukm = ? LIMIT 1";
+        $stmtCheck = $this->dbConnect->prepare($checkSql);
+        if ($stmtCheck) {
+            $stmtCheck->bind_param("s", $ukmName);
+            $stmtCheck->execute();
+            $stmtCheck->store_result();
+            if ($stmtCheck->num_rows > 0) {
+                $stmtCheck->close();
+                return [
+                    'status' => 0,
+                    'status_pesan' => "Nama UKM sudah ada"
+                ];
+            }
+            $stmtCheck->close();
+        } else {
+             // Handle prepare error for check
+             error_log("Database prepare statement failed for UKM check: " . $this->dbConnect->error);
+             // Continue without check, or return error based on desired strictness
+        }
+
+
+        // Prepare statement for insertion
+        $stmt = $this->dbConnect->prepare("INSERT INTO ".$this->tblUkm." (nama_ukm) VALUES (?)");
+        if (!$stmt) {
+             return [
+                'status' => 0,
+                'status_pesan' => "Database prepare statement failed for insert: " . $this->dbConnect->error
+            ];
+        }
+
+        $stmt->bind_param("s", $ukmName);
+
+        if ($stmt->execute()) {
+            $stmt->close();
+            return [
+                'status' => 1,
+                'status_pesan' => "UKM berhasil ditambahkan",
+                'ukm_id' => $this->dbConnect->insert_id // Return the ID of the newly created UKM
+            ];
+        } else {
+            $error = $stmt->error;
+            $stmt->close();
+            return [
+                'status' => 0,
+                'status_pesan' => "Gagal menambahkan UKM: " . $error
+            ];
+        }
     }
 }
 ?>

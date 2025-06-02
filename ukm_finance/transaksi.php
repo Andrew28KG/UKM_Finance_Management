@@ -12,6 +12,38 @@ $finance = new Finance();
 $ukms = $finance->getUkm();
 $ukm_id = isset($_GET['ukm_id']) ? $_GET['ukm_id'] : (isset($_SESSION['ukm_id']) ? $_SESSION['ukm_id'] : (count($ukms) > 0 ? $ukms[0]['id'] : null));
 
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'add') {
+        $result = $finance->tambahTransaksi([
+            'ukm_id' => $_POST['ukm_id'],
+            'jenis' => $_POST['jenis'],
+            'kategori' => $_POST['kategori'],
+            'jumlah' => $_POST['jumlah'],
+            'tanggal' => $_POST['tanggal'],
+            'keterangan' => $_POST['keterangan']
+        ]);
+        
+        if ($result['status'] === 1) {
+            header("Location: transaksi.php?ukm_id=" . $_POST['ukm_id'] . "&success=1");
+            exit();
+        } else {
+            $error_message = $result['status_pesan'];
+        }
+    }
+}
+
+// Handle delete request
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+    $result = $finance->hapusTransaksi($_POST['id']);
+    if ($result['status'] === 1) {
+        header("Location: transaksi.php?ukm_id=" . $_POST['ukm_id'] . "&success=2");
+        exit();
+    } else {
+        $error_message = $result['status_pesan'];
+    }
+}
+
 // If in preview mode, use the first UKM
 if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
     $ukm_id = $ukms[0]['id'];
@@ -43,13 +75,35 @@ foreach($ukms as $ukm) {
             <button id="content-toggle-btn">
                 <i class="fas fa-chevron-left"></i>
             </button>
-        </div>        <section class="transaksi-page">
+        </div>
+        <section class="transaksi-page">
             <div class="page-header">
                 <h1>Manajemen Transaksi <?php echo $ukm_name ? "- $ukm_name" : ""; ?></h1>
                 <?php include('inc/profile_bar.php'); ?>
             </div>
     
     <?php if($ukm_id): ?>
+        <?php if(isset($_GET['success'])): ?>
+            <div class="alert <?php echo $_GET['success'] == 1 ? 'alert-success' : 'alert-success'; ?>">
+                <?php 
+                switch($_GET['success']) {
+                    case 1:
+                        echo 'Transaksi berhasil ditambahkan';
+                        break;
+                    case 2:
+                        echo 'Transaksi berhasil dihapus';
+                        break;
+                }
+                ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if(isset($error_message)): ?>
+            <div class="alert alert-danger">
+                <?php echo $error_message; ?>
+            </div>
+        <?php endif; ?>
+
         <div class="ukm-selector">
             <form method="GET" action="">
                 <label for="ukm">Pilih UKM:</label>
@@ -66,7 +120,8 @@ foreach($ukms as $ukm) {
         <div class="transaksi-container">
             <div class="transaksi-form">
                 <h2>Tambah Transaksi Baru</h2>
-                <form id="transaksiForm">
+                <form method="POST" action="">
+                    <input type="hidden" name="action" value="add">
                     <input type="hidden" name="ukm_id" value="<?php echo $ukm_id; ?>">
                     
                     <div class="form-group">
@@ -102,32 +157,13 @@ foreach($ukms as $ukm) {
                         <button type="submit" class="btn btn-primary">Simpan Transaksi</button>
                     </div>
                 </form>
-                <div id="responseMessage"></div>
             </div>
             
             <div class="transaksi-list">
                 <h2>Daftar Transaksi</h2>
                 
-                <div class="filter-container">
-                    <input type="text" id="searchTransaksi" placeholder="Cari transaksi...">
-                    <select id="filterJenis">
-                        <option value="">Semua Jenis</option>
-                        <option value="pemasukan">Pemasukan</option>
-                        <option value="pengeluaran">Pengeluaran</option>
-                    </select>
-                </div>
                 
                 <table id="transaksiTable">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Kategori</th>
-                            <th>Jenis</th>
-                            <th>Jumlah</th>
-                            <th>Keterangan</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
                     <tbody>
                         <?php if(count($transaksi) > 0): ?>
                             <?php foreach($transaksi as $t): ?>
@@ -138,7 +174,12 @@ foreach($ukms as $ukm) {
                                     <td>Rp <?php echo number_format($t['jumlah'], 0, ',', '.'); ?></td>
                                     <td><?php echo $t['keterangan']; ?></td>
                                     <td>
-                                        <button class="btn-delete" data-id="<?php echo $t['id']; ?>">Hapus</button>
+                                        <form method="POST" action="" style="display: inline;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?php echo $t['id']; ?>">
+                                            <input type="hidden" name="ukm_id" value="<?php echo $ukm_id; ?>">
+                                            <button type="submit" class="btn-delete" onclick="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?')">Hapus</button>
+                                        </form>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -154,101 +195,58 @@ foreach($ukms as $ukm) {
         
         <script>
             $(document).ready(function() {
-                // Add transaction
-                $('#transaksiForm').submit(function(e) {
-                    e.preventDefault();
-                    
-                    const formData = {
-                        ukm_id: $('input[name="ukm_id"]').val(),
-                        jenis: $('#jenis').val(),
-                        kategori: $('#kategori').val(),
-                        jumlah: $('#jumlah').val(),
-                        tanggal: $('#tanggal').val(),
-                        keterangan: $('#keterangan').val()
-                    };
-                    
-                    $.ajax({
-                        url: 'api/transaksi.php',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(formData),
-                        success: function(response) {
-                            if(response.status === 1) {
-                                $('#responseMessage').html('<div class="alert alert-success">' + response.status_pesan + '</div>');
-                                $('#transaksiForm')[0].reset();
-                                // Reload page after 1 second
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                $('#responseMessage').html('<div class="alert alert-danger">' + response.status_pesan + '</div>');
-                            }
-                        },
-                        error: function() {
-                            $('#responseMessage').html('<div class="alert alert-danger">Terjadi kesalahan. Silakan coba lagi.</div>');
-                        }
-                    });
-                });
-                
-                // Delete transaction
-                $('.btn-delete').click(function() {
-                    if(confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                        const id = $(this).data('id');
-                        
-                        $.ajax({
-                            url: 'api/transaksi.php?id=' + id,
-                            type: 'DELETE',
-                            success: function(response) {
-                                if(response.status === 1) {
-                                    alert(response.status_pesan);
-                                    location.reload();
-                                } else {
-                                    alert(response.status_pesan);
-                                }
-                            },
-                            error: function() {
-                                alert('Terjadi kesalahan. Silakan coba lagi.');
-                            }
-                        });
-                    }
-                });
-                
                 // Search and filter transactions
-                $('#searchTransaksi').on('keyup', function() {
-                    const value = $(this).val().toLowerCase();
-                    filterTable(value, $('#filterJenis').val());
-                });
-                
-                $('#filterJenis').on('change', function() {
-                    const value = $('#searchTransaksi').val().toLowerCase();
-                    filterTable(value, $(this).val());
-                });
-                
-                function filterTable(search, jenis) {
-                    $('#transaksiTable tbody tr').filter(function() {
-                        const jenisMatch = jenis === '' || $(this).hasClass(jenis);
-                        const textMatch = $(this).text().toLowerCase().indexOf(search) > -1;
-                        $(this).toggle(jenisMatch && textMatch);
+                function filterTable() {
+                    const searchValue = $('#searchTransaksi').val().toLowerCase();
+                    const jenisValue = $('#filterJenis').val().toLowerCase();
+                    
+                    $('#transaksiTable tbody tr').each(function() {
+                        const row = $(this);
+                        
+                        // Skip the "no data" row
+                        if (row.hasClass('no-data') || row.hasClass('no-data-filtered')) {
+                            return;
+                        }
+
+                        const rowText = row.text().toLowerCase();
+                        
+                        // Get the text content of the 'Jenis' column (assuming it's the 3rd column, index 2)
+                        const rowJenisText = row.find('td').eq(2).text().toLowerCase().trim();
+                        
+                        const matchesSearch = searchValue === '' || rowText.includes(searchValue);
+                        // Check if the rowJenisText contains the selected filter value (or if filter is empty)
+                        const matchesJenis = jenisValue === '' || rowJenisText.includes(jenisValue);
+                        
+                        row.toggle(matchesSearch && matchesJenis);
                     });
                     
-                    // Show "no data" message if no rows are visible
-                    const visibleRows = $('#transaksiTable tbody tr:visible').length;
-                    if(visibleRows === 0) {
-                        if($('#transaksiTable tbody tr.no-data-filtered').length === 0) {
-                            $('#transaksiTable tbody').append('<tr class="no-data-filtered"><td colspan="6" class="no-data">Tidak ada transaksi yang sesuai dengan filter</td></tr>');
-                        }
-                    } else {
-                        $('#transaksiTable tbody tr.no-data-filtered').remove();
+                    // Check if any rows are visible
+                    const visibleRows = $('#transaksiTable tbody tr:visible').not('.no-data, .no-data-filtered').length;
+                    
+                    // Remove existing "no data" message
+                    $('#transaksiTable tbody tr.no-data-filtered').remove();
+                    
+                    // Add "no data" message if no rows are visible
+                    if (visibleRows === 0) {
+                        $('#transaksiTable tbody').append(
+                            '<tr class="no-data-filtered"><td colspan="6" class="no-data">Tidak ada transaksi yang sesuai dengan filter</td></tr>'
+                        );
                     }
                 }
+                
+                // Add event listeners
+                $('#searchTransaksi').on('keyup', filterTable);
+                $('#filterJenis').on('change', filterTable);
+                
+                // Initial filter
+                filterTable();
             });
         </script>
     <?php else: ?>
         <div class="no-ukm">
             <p>Tidak ada UKM yang tersedia. Silakan hubungi administrator.</p>
-        </div>            <?php endif; ?>
+        </div>
+    <?php endif; ?>
         </section>
     </div>
 </div>
-
-<?php include('inc/footer.php'); ?>

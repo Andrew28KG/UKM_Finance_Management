@@ -10,11 +10,16 @@ requireAuth();
 
 $finance = new Finance();
 $ukms = $finance->getUkm();
-$ukm_id = isset($_SESSION['ukm_id']) ? $_SESSION['ukm_id'] : (count($ukms) > 0 ? $ukms[0]['id'] : null);
+$ukm_id = isset($_GET['ukm_id']) ? $_GET['ukm_id'] : (isset($_SESSION['ukm_id']) ? $_SESSION['ukm_id'] : (count($ukms) > 0 ? $ukms[0]['id'] : null));
 
 // If in preview mode, use the first UKM
 if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
     $ukm_id = $ukms[0]['id'];
+}
+
+// Store selected UKM in session
+if($ukm_id) {
+    $_SESSION['ukm_id'] = $ukm_id;
 }
 
 // Get UKM name for display
@@ -31,15 +36,27 @@ if ($ukm_id) {
 // Get financial data for the UKM
 $laporan = $finance->getLaporanKeuangan($ukm_id);
 $transaksi = $finance->getTransaksi($ukm_id, 5); // Get only the last 5 transactions
+$settings = $finance->getUkmSettings($ukm_id);
 
-// Create mock wallet data - in a real app, this would be retrieved from the database
+// Add checks for null values
+$laporan = $laporan ?? []; // If $laporan is null, set it to an empty array
+$transaksi = $transaksi ?? []; // If $transaksi is null, set it to an empty array
+
+// Provide default values for settings keys if $settings is null or keys are missing
+$default_settings = [
+    'monthly_budget' => 0,
+    'emergency_fund' => 0
+];
+$settings = $settings ?? $default_settings;
+$settings = array_merge($default_settings, $settings); // Ensure all default keys exist
+
+// Calculate wallet data from database
 $wallet = [
     'cash_balance' => isset($laporan['saldo']) ? $laporan['saldo'] : 0,
-    'pending_requests' => 2,
     'last_updated' => date('Y-m-d H:i:s'),
-    'monthly_budget' => 5000000,
-    'budget_remaining' => 3500000,
-    'budget_spent' => 1500000
+    'monthly_budget' => $settings['monthly_budget'],
+    'budget_remaining' => ($settings['monthly_budget'] ?? 0) - ($laporan['pengeluaran'] ?? 0),
+    'budget_spent' => ($laporan['pengeluaran'] ?? 0)
 ];
 
 // Wallet cards data
@@ -58,7 +75,7 @@ $wallet_cards = [
     ],
     [
         'name' => 'Dana Darurat',
-        'balance' => 1000000,
+        'balance' => $settings['emergency_fund'],
         'icon' => 'fas fa-first-aid',
         'color' => 'danger'
     ]
@@ -78,6 +95,25 @@ $wallet_cards = [
                 <?php include('inc/profile_bar.php'); ?>
             </div>
             
+            <?php if($ukm_id): ?>
+                <div class="ukm-selector">
+                    <form method="GET" action="">
+                        <label for="ukm">Pilih UKM:</label>
+                        <select name="ukm_id" id="ukm" onchange="this.form.submit()">
+                            <?php foreach($ukms as $ukm): ?>
+                                <option value="<?php echo $ukm['id']; ?>" <?php echo ($ukm['id'] == $ukm_id) ? 'selected' : ''; ?>>
+                                    <?php echo $ukm['nama_ukm']; ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="no-ukm">
+                    <p>Tidak ada UKM yang tersedia. Silakan hubungi administrator.</p>
+                </div>
+            <?php endif; ?>
+
             <p class="ukm-title">
                 <?php echo $ukm_name ? "$ukm_name" : "Pilih UKM terlebih dahulu"; ?>
             </p>
@@ -113,7 +149,7 @@ $wallet_cards = [
                     </div>
                 </div>
                 <div class="progress-bar-container">
-                    <?php $percentage = ($wallet['budget_spent'] / $wallet['monthly_budget']) * 100; ?>
+                    <?php $percentage = ($wallet['monthly_budget'] > 0) ? ($wallet['budget_spent'] / $wallet['monthly_budget']) * 100 : 0; ?>
                     <div class="progress-bar" style="width: <?php echo $percentage; ?>%"></div>
                 </div>
                 <div class="progress-label">
@@ -161,44 +197,6 @@ $wallet_cards = [
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    <?php endif; ?>
-                </div>
-            </div>
-            
-            <div class="pending-requests">
-                <div class="card-header">
-                    <h2>Pengajuan Dana</h2>
-                </div>
-                <div class="request-list">
-                    <?php if ($wallet['pending_requests'] == 0): ?>
-                        <div class="empty-state">
-                            <i class="fas fa-file-invoice"></i>
-                            <p>Tidak ada pengajuan dana yang tertunda</p>
-                        </div>
-                    <?php else: ?>
-                        <!-- Mock pending requests data -->
-                        <div class="request-card">
-                            <div class="request-info">
-                                <h3>Pembelian Alat Musik</h3>
-                                <p>Diajukan oleh: Ketua UKM</p>
-                                <p class="request-date">15 Mei 2023</p>
-                            </div>
-                            <div class="request-amount">
-                                <h3>Rp 750.000</h3>
-                                <span class="badge badge-warning">Menunggu Persetujuan</span>
-                            </div>
-                        </div>
-                        <div class="request-card">
-                            <div class="request-info">
-                                <h3>Konsumsi Rapat Anggota</h3>
-                                <p>Diajukan oleh: Sekretaris</p>
-                                <p class="request-date">12 Mei 2023</p>
-                            </div>
-                            <div class="request-amount">
-                                <h3>Rp 300.000</h3>
-                                <span class="badge badge-warning">Menunggu Persetujuan</span>
-                            </div>
-                        </div>
                     <?php endif; ?>
                 </div>
             </div>

@@ -10,11 +10,42 @@ requireAuth();
 
 $finance = new Finance();
 $ukms = $finance->getUkm();
+
+// Handle UKM selection from GET parameter
+if (isset($_GET['ukm_id'])) {
+    $_SESSION['ukm_id'] = $_GET['ukm_id'];
+}
+
 $ukm_id = isset($_SESSION['ukm_id']) ? $_SESSION['ukm_id'] : (count($ukms) > 0 ? $ukms[0]['id'] : null);
 
 // If in preview mode, use the first UKM
 if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
     $ukm_id = $ukms[0]['id'];
+}
+
+// Get notifications and requests from database
+$notifications = [];
+$requests = [];
+if ($ukm_id) {
+    try {
+        // Get notifications for the current user
+        $notifications = $finance->getNotifications($_SESSION['user_id'], 2); // Limit to 2 for dashboard
+        
+        // Get pending requests for the current UKM
+        $requests = $finance->getPendingRequests($ukm_id, 2); // Limit to 2 for dashboard
+    } catch (Exception $e) {
+        error_log("Error fetching dashboard data: " . $e->getMessage());
+    }
+}
+
+// Get period-over-period changes
+$periodChanges = [];
+if ($ukm_id) {
+    try {
+        $periodChanges = $finance->getPeriodChanges($ukm_id);
+    } catch (Exception $e) {
+        error_log("Error fetching period changes: " . $e->getMessage());
+    }
 }
 ?>
 
@@ -48,62 +79,6 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                         break;
                     }
                 }
-                
-                // Mock notifications data
-                $notifications = [
-                    [
-                        'id' => 1,
-                        'title' => 'Pengajuan Dana Diterima',
-                        'message' => 'Pengajuan dana untuk kegiatan Workshop Fotografi telah disetujui oleh bendahara.',
-                        'date' => '2023-05-15 14:30:00',
-                        'is_read' => false,
-                        'type' => 'success'
-                    ],
-                    [
-                        'id' => 2,
-                        'title' => 'Transaksi Baru',
-                        'message' => 'Bendahara telah menambahkan transaksi pengeluaran baru sebesar Rp. 500.000 untuk pembelian peralatan.',
-                        'date' => '2023-05-12 10:15:00',
-                        'is_read' => true,
-                        'type' => 'info'
-                    ],
-                    [
-                        'id' => 3,
-                        'title' => 'Pengingat Pelaporan',
-                        'message' => 'Jangan lupa untuk menyerahkan laporan keuangan bulanan sebelum tanggal 30 bulan ini.',
-                        'date' => '2023-05-10 09:00:00',
-                        'is_read' => false,
-                        'type' => 'warning'
-                    ],
-                    [
-                        'id' => 4,
-                        'title' => 'Masalah Validasi Data',
-                        'message' => 'Terdapat kesalahan pada data transaksi dengan ID #3421. Mohon periksa kembali.',
-                        'date' => '2023-05-08 16:45:00',
-                        'is_read' => true,
-                        'type' => 'danger'
-                    ]
-                ];
-                
-                // Mock pending requests
-                $requests = [
-                    [
-                        'id' => 1,
-                        'title' => 'Pembelian Alat Musik',
-                        'applicant' => 'Ketua UKM',
-                        'date' => '2023-05-15',
-                        'amount' => 750000,
-                        'status' => 'pending'
-                    ],
-                    [
-                        'id' => 2,
-                        'title' => 'Konsumsi Rapat Anggota',
-                        'applicant' => 'Sekretaris',
-                        'date' => '2023-05-12',
-                        'amount' => 300000,
-                        'status' => 'pending'
-                    ]
-                ];
                 ?>
                 <script>
                     function showLoading() {
@@ -128,13 +103,14 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                         
                         <div class="finance-summary-content">
                             <div class="summary-cards">
-                                <div class="summary-card income" data-type="income" data-value="<?php echo $laporan['pemasukan']; ?>" data-previous="<?php echo isset($laporan['previous_pemasukan']) ? $laporan['previous_pemasukan'] : $laporan['pemasukan'] * 0.9; ?>">
+                                <div class="summary-card income" data-type="income" data-value="<?php echo $laporan['pemasukan']; ?>" data-previous="<?php echo $periodChanges['pemasukan']['previous']; ?>">
                                     <div class="card-header">
                                         <div class="card-icon income">
                                             <i class="fas fa-arrow-down"></i>
                                         </div>
-                                        <div class="indicator positive">
-                                            <i class="fas fa-chevron-up"></i> 10%
+                                        <div class="indicator <?php echo $periodChanges['pemasukan']['change'] >= 0 ? 'positive' : 'negative'; ?>">
+                                            <i class="fas fa-chevron-<?php echo $periodChanges['pemasukan']['change'] >= 0 ? 'up' : 'down'; ?>"></i>
+                                            <?php echo abs(round($periodChanges['pemasukan']['change'], 1)); ?>%
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -154,13 +130,14 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                                     <div class="card-decoration"></div>
                                 </div>
                                 
-                                <div class="summary-card expense" data-type="expense" data-value="<?php echo $laporan['pengeluaran']; ?>" data-previous="<?php echo isset($laporan['previous_pengeluaran']) ? $laporan['previous_pengeluaran'] : $laporan['pengeluaran'] * 0.85; ?>">
+                                <div class="summary-card expense" data-type="expense" data-value="<?php echo $laporan['pengeluaran']; ?>" data-previous="<?php echo $periodChanges['pengeluaran']['previous']; ?>">
                                     <div class="card-header">
                                         <div class="card-icon expense">
                                             <i class="fas fa-arrow-up"></i>
                                         </div>
-                                        <div class="indicator negative">
-                                            <i class="fas fa-chevron-up"></i> 15%
+                                        <div class="indicator <?php echo $periodChanges['pengeluaran']['change'] >= 0 ? 'positive' : 'negative'; ?>">
+                                            <i class="fas fa-chevron-<?php echo $periodChanges['pengeluaran']['change'] >= 0 ? 'up' : 'down'; ?>"></i>
+                                            <?php echo abs(round($periodChanges['pengeluaran']['change'], 1)); ?>%
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -180,13 +157,14 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                                     <div class="card-decoration"></div>
                                 </div>
                                 
-                                <div class="summary-card balance" data-type="balance" data-value="<?php echo $laporan['saldo']; ?>" data-previous="<?php echo isset($laporan['previous_saldo']) ? $laporan['previous_saldo'] : $laporan['saldo'] * 0.95; ?>">
+                                <div class="summary-card balance" data-type="balance" data-value="<?php echo $laporan['saldo']; ?>" data-previous="<?php echo $periodChanges['saldo']['previous']; ?>">
                                     <div class="card-header">
                                         <div class="card-icon balance">
                                             <i class="fas fa-wallet"></i>
                                         </div>
-                                        <div class="indicator positive">
-                                            <i class="fas fa-chevron-up"></i> 5%
+                                        <div class="indicator <?php echo $periodChanges['saldo']['change'] >= 0 ? 'positive' : 'negative'; ?>">
+                                            <i class="fas fa-chevron-<?php echo $periodChanges['saldo']['change'] >= 0 ? 'up' : 'down'; ?>"></i>
+                                            <?php echo abs(round($periodChanges['saldo']['change'], 1)); ?>%
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -249,7 +227,7 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                 </div>
                     
                 <!-- Dashboard Grid Layout -->
-                <div class="dashboard-grid">
+                <div class="dashboard-grid full-width">
                     <!-- First Column: Recent Transactions -->
                     <div class="recent-transactions compact">
                         <div class="section-header">
@@ -270,9 +248,9 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                                 <?php 
                                 $count = 0;
                                 foreach($transaksi as $t): 
-                                    $hidden = $count >= 3 ? 'style="display:none;" class="extra-transaction"' : '';
+                                    if ($count >= 5) break; // Limit to 5 recent transactions
                                 ?>
-                                <tr class="<?php echo $t['jenis']; ?>" <?php echo $hidden; ?>>
+                                <tr class="<?php echo $t['jenis']; ?>">
                                     <td><?php echo date('d/m/Y', strtotime($t['tanggal'])); ?></td>
                                     <td><?php echo $t['keterangan']; ?></td>
                                     <td class="<?php echo $t['jenis'] == 'Pemasukan' ? 'text-success' : 'text-danger'; ?>">
@@ -294,81 +272,10 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
                     </div>
 
                     <!-- Second Column: Notifications -->
-                    <div class="dashboard-notifications">
-                        <div class="section-header">
-                            <h2>Notifikasi</h2>
-                            <a href="notifications.php" class="btn-sm">Lihat Semua</a>
-                        </div>
-                        
-                        <div class="dashboard-notification-list">
-                            <?php if (empty($notifications)): ?>
-                                <div class="empty-state-compact">
-                                    <i class="fas fa-bell-slash"></i>
-                                    <p>Tidak ada notifikasi</p>
-                                </div>
-                            <?php else: ?>
-                                <?php 
-                                $notifCount = 0;
-                                foreach ($notifications as $notification): 
-                                    if($notifCount >= 2) break; // Only show 2 notifications
-                                ?>
-                                    <div class="notification-card-compact <?php echo $notification['is_read'] ? 'read' : 'unread'; ?> <?php echo $notification['type']; ?>">
-                                        <div class="notification-icon-compact">
-                                            <?php if ($notification['type'] == 'success'): ?>
-                                                <i class="fas fa-check-circle"></i>
-                                            <?php elseif ($notification['type'] == 'warning'): ?>
-                                                <i class="fas fa-exclamation-triangle"></i>
-                                            <?php elseif ($notification['type'] == 'danger'): ?>
-                                                <i class="fas fa-times-circle"></i>
-                                            <?php else: ?>
-                                                <i class="fas fa-info-circle"></i>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="notification-content-compact">
-                                            <div class="notification-header-compact">
-                                                <h3><?php echo $notification['title']; ?></h3>
-                                                <span class="notification-time-compact"><?php echo date('d M', strtotime($notification['date'])); ?></span>
-                                            </div>
-                                            <p><?php echo substr($notification['message'], 0, 60) . (strlen($notification['message']) > 60 ? '...' : ''); ?></p>
-                                        </div>
-                                    </div>
-                                <?php 
-                                    $notifCount++;
-                                endforeach; 
-                                ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+                    
                     
                     <!-- Third Column: Pending Requests -->
-                    <div class="pending-requests-dashboard">
-                        <div class="section-header">
-                            <h2>Pengajuan Dana</h2>
-                            <a href="request.php" class="btn-sm">Lihat Semua</a>
-                        </div>
-                        
-                        <div class="request-list-dashboard">
-                            <?php if (empty($requests)): ?>
-                                <div class="empty-state-compact">
-                                    <i class="fas fa-file-invoice"></i>
-                                    <p>Tidak ada pengajuan dana</p>
-                                </div>
-                            <?php else: ?>
-                                <?php foreach ($requests as $request): ?>
-                                    <div class="request-card-compact">
-                                        <div class="request-info-compact">
-                                            <h3><?php echo $request['title']; ?></h3>
-                                            <p><?php echo $request['applicant']; ?> · <?php echo $request['date']; ?></p>
-                                        </div>
-                                        <div class="request-amount-compact">
-                                            <h3>Rp <?php echo number_format($request['amount'], 0, ',', '.'); ?></h3>
-                                            <span class="badge badge-warning">Menunggu</span>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </section>    </div>
@@ -682,6 +589,17 @@ if (isPreviewMode() && !$ukm_id && count($ukms) > 0) {
     
     #content-toggle-btn {
         display: none !important;
+    }
+
+    /* Adjust layout for grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .dashboard-grid .recent-transactions {
+        grid-column: span 1; /* Make it span the single column */
     }
 </style>
 

@@ -1,5 +1,7 @@
 <?php
 // You can put PHP code here if needed
+// Assume $notificationCount is passed to this file
+$notificationCount = isset($notificationCount) ? $notificationCount : 0;
 ?>
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -22,11 +24,10 @@
                     <span>Transaksi</span>
                 </a>
             </li>
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'notifications.php') ? 'active' : ''; ?>" style="--item-index: 2;">
-                <a href="notifications.php">
-                    <i class="fas fa-bell"></i>
-                    <span>Notifikasi</span>
-                    <span class="notification-badge">3</span>
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'tambah_transaksi_external.php') ? 'active' : ''; ?>" style="--item-index: 2;">
+                <a href="tambah_transaksi_external.php">
+                    <i class="fas fa-external-link-alt"></i>
+                    <span>Tambah Transaksi External</span>
                 </a>
             </li>
             <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'wallet.php') ? 'active' : ''; ?>" style="--item-index: 3;">
@@ -34,11 +35,11 @@
                     <i class="fas fa-wallet"></i>
                     <span>Dompet Saya</span>
                 </a>
-            </li>            
-            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'request.php') ? 'active' : ''; ?>" style="--item-index: 4;">
-                <a href="request.php">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    <span>Request Budget</span>
+            </li>
+            <li class="<?php echo (basename($_SERVER['PHP_SELF']) == 'convert.php') ? 'active' : ''; ?>" style="--item-index: 4;">
+                <a href="convert.php">
+                    <i class="fas fa-file-code"></i>
+                    <span>Konversi XML</span>
                 </a>
             </li>
         </ul>

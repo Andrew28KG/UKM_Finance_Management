@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Default to 'month' view
         let timeRange = 'month';
         let lineChart;
-          // Function to update chart data based on selected time range from dropdown
+
+        // Function to update chart data based on selected time range from dropdown
         function updateChartData(range) {
             timeRange = range;
             const timeRangeDropdown = document.getElementById('timeRangeDropdown');
@@ -27,9 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeRangeDropdown.value = range;
             }
             
-            // Use dummy data by default instead of fetching from API
-            const mockData = generateMockData(range);
-            renderChart(mockData);
+            // Fetch real data from API
+            fetchData(range);
         }
         
         // Add event listener to time range dropdown
@@ -38,17 +38,13 @@ document.addEventListener('DOMContentLoaded', function() {
             timeRangeDropdown.addEventListener('change', function() {
                 updateChartData(this.value);
             });
-        }        // Function to fetch data from API (not used by default now, we use mock data)
+        }
+
+        // Function to fetch data from API
         function fetchData(range) {
             // Show loading state
             timelineChartCanvas.style.opacity = 0.5;
             
-            // Always use mock data for demonstration
-            const mockData = generateMockData(range);
-            renderChart(mockData);
-            timelineChartCanvas.style.opacity = 1;
-            
-            /* Original API fetching code is commented out
             // Get UKM ID from the page
             const ukm_id = timelineChartCanvas.getAttribute('data-ukm-id');
             
@@ -63,9 +59,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     } else {
                         console.error('API returned error:', data.message);
-                        // If API fails, use mock data for demonstration
-                        const mockData = generateMockData(range);
-                        renderChart(mockData);
+                        // Show error message to user
+                        const errorMessage = document.createElement('div');
+                        errorMessage.className = 'alert alert-danger';
+                        errorMessage.textContent = 'Error loading chart data. Please try again later.';
+                        timelineChartCanvas.parentNode.insertBefore(errorMessage, timelineChartCanvas);
                     }
                     timelineChartCanvas.style.opacity = 1;
                 })
@@ -73,71 +71,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error fetching data:', error);
                     timelineChartCanvas.style.opacity = 1;
                     
-                    // If API fails, use mock data for demonstration
-                    const mockData = generateMockData(range);
-                    renderChart(mockData);
+                    // Show error message to user
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'alert alert-danger';
+                    errorMessage.textContent = 'Error loading chart data. Please try again later.';
+                    timelineChartCanvas.parentNode.insertBefore(errorMessage, timelineChartCanvas);
                 });
-            */
-        }
-          // Process API data for chart
-        function processDataForChart(data, range) {
-            // This function is no longer necessary as the API returns pre-formatted data
-            // But we'll keep it here for backwards compatibility or future custom processing
-            
-            if (data.status === 'success') {
-                return {
-                    labels: data.labels,
-                    pemasukan: data.pemasukan,
-                    pengeluaran: data.pengeluaran
-                };
-            } else {
-                // If data is not in the expected format, use mock data
-                return generateMockData(range);
-            }
-        }
-        
-        // Generate mock data for demonstration
-        function generateMockData(range) {
-            const labels = [];
-            const pemasukan = [];
-            const pengeluaran = [];
-            
-            if (range === 'month') {
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                for (let i = 0; i < 12; i++) {
-                    labels.push(months[i]);
-                    pemasukan.push(Math.floor(Math.random() * 5000000) + 1000000);
-                    pengeluaran.push(Math.floor(Math.random() * 4000000) + 800000);
-                }
-            } else if (range === 'week') {
-                for (let i = 1; i <= 8; i++) {
-                    labels.push('W' + i);
-                    pemasukan.push(Math.floor(Math.random() * 1000000) + 200000);
-                    pengeluaran.push(Math.floor(Math.random() * 800000) + 150000);
-                }
-            } else if (range === 'day') {
-                const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-                for (let i = 0; i < 7; i++) {
-                    labels.push(days[i]);
-                    pemasukan.push(Math.floor(Math.random() * 300000) + 50000);
-                    pengeluaran.push(Math.floor(Math.random() * 250000) + 40000);
-                }
-            }
-            
-            return {
-                labels: labels,
-                pemasukan: pemasukan,
-                pengeluaran: pengeluaran
-            };
-        }
-        
-        // Helper function to get the week number
-        function getWeekNumber(date) {
-            const d = new Date(date);
-            d.setHours(0, 0, 0, 0);
-            d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-            const yearStart = new Date(d.getFullYear(), 0, 1);
-            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         }
         
         // Render chart with the provided data

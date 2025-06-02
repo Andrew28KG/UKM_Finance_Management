@@ -1,2 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ukmFinance><transaksi id="18"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pengeluaran</jenis><kategori>Pameran</kategori><jumlah>1200000.00</jumlah><tanggal>2023-04-25</tanggal><keterangan>Pameran foto tahunan</keterangan></transaksi><transaksi id="30"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pengeluaran</jenis><kategori>Konsumsi</kategori><jumlah>900000.00</jumlah><tanggal>2023-04-25</tanggal><keterangan>Konsumsi kegiatan camping</keterangan></transaksi><transaksi id="6"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pengeluaran</jenis><kategori>Transportasi</kategori><jumlah>450000.00</jumlah><tanggal>2023-04-20</tanggal><keterangan>Transportasi pertandingan</keterangan></transaksi><transaksi id="24"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pengeluaran</jenis><kategori>Peralatan</kategori><jumlah>700000.00</jumlah><tanggal>2023-04-20</tanggal><keterangan>Pembelian recorder dan alat tulis</keterangan></transaksi><transaksi id="12"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pengeluaran</jenis><kategori>Sewa Studio</kategori><jumlah>800000.00</jumlah><tanggal>2023-04-15</tanggal><keterangan>Sewa studio untuk rekaman</keterangan></transaksi><transaksi id="29"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>550000.00</jumlah><tanggal>2023-04-15</tanggal><keterangan>Iuran anggota bulan April</keterangan></transaksi><transaksi id="11"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>600000.00</jumlah><tanggal>2023-04-10</tanggal><keterangan>Iuran anggota bulan April</keterangan></transaksi><transaksi id="23"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>400000.00</jumlah><tanggal>2023-04-10</tanggal><keterangan>Iuran anggota bulan April</keterangan></transaksi><transaksi id="17"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>450000.00</jumlah><tanggal>2023-04-05</tanggal><keterangan>Iuran anggota bulan April</keterangan></transaksi><transaksi id="5"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>500000.00</jumlah><tanggal>2023-03-15</tanggal><keterangan>Iuran anggota bulan Maret</keterangan></transaksi><transaksi id="22"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pengeluaran</jenis><kategori>Seminar</kategori><jumlah>1500000.00</jumlah><tanggal>2023-03-15</tanggal><keterangan>Seminar jurnalistik</keterangan></transaksi><transaksi id="10"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pengeluaran</jenis><kategori>Konsumsi</kategori><jumlah>500000.00</jumlah><tanggal>2023-03-10</tanggal><keterangan>Konsumsi latihan rutin</keterangan></transaksi><transaksi id="4"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pengeluaran</jenis><kategori>Konsumsi</kategori><jumlah>300000.00</jumlah><tanggal>2023-03-05</tanggal><keterangan>Konsumsi rapat anggota</keterangan></transaksi><transaksi id="28"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pengeluaran</jenis><kategori>Transportasi</kategori><jumlah>1200000.00</jumlah><tanggal>2023-03-05</tanggal><keterangan>Transportasi pendakian gunung</keterangan></transaksi><transaksi id="16"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pengeluaran</jenis><kategori>Workshop</kategori><jumlah>1000000.00</jumlah><tanggal>2023-03-01</tanggal><keterangan>Workshop fotografi dasar</keterangan></transaksi><transaksi id="9"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pemasukan</jenis><kategori>Pentas Seni</kategori><jumlah>3000000.00</jumlah><tanggal>2023-02-28</tanggal><keterangan>Hasil pentas seni kampus</keterangan></transaksi><transaksi id="21"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pemasukan</jenis><kategori>Penjualan Majalah</kategori><jumlah>900000.00</jumlah><tanggal>2023-02-20</tanggal><keterangan>Penjualan majalah edisi Februari</keterangan></transaksi><transaksi id="3"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pengeluaran</jenis><kategori>Peralatan</kategori><jumlah>750000.00</jumlah><tanggal>2023-02-15</tanggal><keterangan>Pembelian bola dan net</keterangan></transaksi><transaksi id="15"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pemasukan</jenis><kategori>Proyek Foto</kategori><jumlah>1500000.00</jumlah><tanggal>2023-02-15</tanggal><keterangan>Proyek foto wisuda</keterangan></transaksi><transaksi id="2"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pemasukan</jenis><kategori>Sponsorship</kategori><jumlah>2000000.00</jumlah><tanggal>2023-02-10</tanggal><keterangan>Sponsorship dari PT ABC</keterangan></transaksi><transaksi id="27"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pemasukan</jenis><kategori>Sponsorship</kategori><jumlah>2500000.00</jumlah><tanggal>2023-02-10</tanggal><keterangan>Sponsorship dari toko outdoor</keterangan></transaksi><transaksi id="20"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pengeluaran</jenis><kategori>Percetakan</kategori><jumlah>1800000.00</jumlah><tanggal>2023-01-30</tanggal><keterangan>Cetak majalah kampus</keterangan></transaksi><transaksi id="8"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pengeluaran</jenis><kategori>Peralatan</kategori><jumlah>1500000.00</jumlah><tanggal>2023-01-25</tanggal><keterangan>Pembelian senar gitar dan stik drum</keterangan></transaksi><transaksi id="26"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pengeluaran</jenis><kategori>Peralatan</kategori><jumlah>3000000.00</jumlah><tanggal>2023-01-25</tanggal><keterangan>Pembelian tenda dan peralatan camping</keterangan></transaksi><transaksi id="14"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pengeluaran</jenis><kategori>Peralatan</kategori><jumlah>2500000.00</jumlah><tanggal>2023-01-20</tanggal><keterangan>Pembelian lensa kamera</keterangan></transaksi><transaksi id="1"><ukm_id>1</ukm_id><nama_ukm>UKM Olahraga</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>500000.00</jumlah><tanggal>2023-01-15</tanggal><keterangan>Iuran anggota bulan Januari</keterangan></transaksi><transaksi id="25"><ukm_id>5</ukm_id><nama_ukm>UKM Pecinta Alam</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>550000.00</jumlah><tanggal>2023-01-15</tanggal><keterangan>Iuran anggota bulan Januari</keterangan></transaksi><transaksi id="7"><ukm_id>2</ukm_id><nama_ukm>UKM Musik</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>600000.00</jumlah><tanggal>2023-01-10</tanggal><keterangan>Iuran anggota bulan Januari</keterangan></transaksi><transaksi id="19"><ukm_id>4</ukm_id><nama_ukm>UKM Jurnalistik</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>400000.00</jumlah><tanggal>2023-01-10</tanggal><keterangan>Iuran anggota bulan Januari</keterangan></transaksi><transaksi id="13"><ukm_id>3</ukm_id><nama_ukm>UKM Fotografi</nama_ukm><jenis>pemasukan</jenis><kategori>Iuran Anggota</kategori><jumlah>450000.00</jumlah><tanggal>2023-01-05</tanggal><keterangan>Iuran anggota bulan Januari</keterangan></transaksi></ukmFinance>
+<ukmFinance>
+    <transaksi id="31">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pemasukan</jenis>
+        <kategori>Iuran Anggota</kategori>
+        <jumlah>10000000.00</jumlah>
+        <tanggal>2025-05-31</tanggal>
+        <keterangan>pemasukan dari anggota</keterangan>
+    </transaksi>
+    <transaksi id="32">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pengeluaran</jenis>
+        <kategori>Konsumsi</kategori>
+        <jumlah>10500000.00</jumlah>
+        <tanggal>2025-05-29</tanggal>
+        <keterangan>Besar</keterangan>
+    </transaksi>
+    <transaksi id="5">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pemasukan</jenis>
+        <kategori>Iuran Anggota</kategori>
+        <jumlah>500000.00</jumlah>
+        <tanggal>2023-03-15</tanggal>
+        <keterangan>Iuran anggota bulan Maret</keterangan>
+    </transaksi>
+    <transaksi id="4">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pengeluaran</jenis>
+        <kategori>Konsumsi</kategori>
+        <jumlah>300000.00</jumlah>
+        <tanggal>2023-03-05</tanggal>
+        <keterangan>Konsumsi rapat anggota</keterangan>
+    </transaksi>
+    <transaksi id="3">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pengeluaran</jenis>
+        <kategori>Peralatan</kategori>
+        <jumlah>750000.00</jumlah>
+        <tanggal>2023-02-15</tanggal>
+        <keterangan>Pembelian bola dan net</keterangan>
+    </transaksi>
+    <transaksi id="2">
+        <ukm_id>1</ukm_id>
+        <nama_ukm>UKM Olahraga</nama_ukm>
+        <jenis>pemasukan</jenis>
+        <kategori>Sponsorship</kategori>
+        <jumlah>2000000.00</jumlah>
+        <tanggal>2023-02-10</tanggal>
+        <keterangan>Sponsorship dari PT ABC</keterangan>
+    </transaksi>
+</ukmFinance>
