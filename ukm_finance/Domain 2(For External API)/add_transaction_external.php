@@ -355,6 +355,326 @@ if (isset($_POST['api_url'])) {
                 overflow-x: auto;
             }
         }
+
+        /* XML Table Styles */
+        .xml-table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .table-actions {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background-color: #45a049;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        /* Edit Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            position: sticky;
+            bottom: 0;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            z-index: 1;
+        }
+
+        /* Enhanced Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 0 -20px;
+            padding: 0 20px;
+        }
+
+        .transaction-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 0;
+        }
+
+        .transaction-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .transaction-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .transaction-table tr:hover {
+            background-color: rgba(45, 102, 74, 0.05);
+        }
+
+        .transaction-table .pemasukan {
+            color: #2ecc71;
+            font-weight: 500;
+        }
+
+        .transaction-table .pengeluaran {
+            color: #e74c3c;
+            font-weight: 500;
+        }
+
+        /* Enhanced Button Styles */
+        .btn-edit, .btn-delete {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #27ae60;
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        /* Loading State */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Enhancements */
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Form Enhancements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(45, 102, 74, 0.1);
+            outline: none;
+        }
+
+        /* Enhanced Image Styles */
+        .transaction-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .transaction-image:hover {
+            transform: scale(1.1);
+        }
+
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .image-preview-modal img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-preview-modal .close-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 10px;
+        }
+
+        .image-preview-modal .close-preview:hover {
+            color: #ff4444;
+        }
+
+        .image-upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .image-upload-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .image-upload-options label {
+            margin: 0;
+        }
+
+        .image-upload-options input[type="radio"] {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -371,6 +691,7 @@ if (isset($_POST['api_url'])) {
                 <button class="tab-button active" data-tab="select-ukm">Pilih UKM yang Ada</button>
                 <button class="tab-button" data-tab="create-ukm">Buat UKM Baru</button>
                 <button class="tab-button" data-tab="read-xml">Baca XML</button>
+                <button class="tab-button" data-tab="xml-table">XML Table View</button>
             </div>
 
             <!-- Tab Content -->
@@ -413,6 +734,14 @@ if (isset($_POST['api_url'])) {
                          <textarea id="keterangan" name="keterangan" rows="3" placeholder="Opsional: Deskripsi singkat transaksi"></textarea>
                      </div>
 
+                     <div class="form-group">
+                         <label for="image">URL Gambar</label>
+                         <div class="image-upload-container">
+                             <input type="url" id="image" name="image" placeholder="https://example.com/image.jpg">
+                             <img id="image_preview" class="image-preview" alt="Preview">
+                         </div>
+                     </div>
+
                      <button type="submit" class="btn btn-primary" id="submit-btn-transaction">
                          Simpan Transaksi
                      </button>
@@ -445,6 +774,37 @@ if (isset($_POST['api_url'])) {
                 </form>
                 <div id="xml-result" class="mt-4">
                     <pre id="xml-content" style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;"></pre>
+                </div>
+            </div>
+
+            <div id="xml-table" class="tab-content">
+                <div class="xml-table-container">
+                    <div class="table-actions">
+                        <button class="btn btn-primary" onclick="refreshXmlTable()">
+                            <i class="fas fa-sync-alt"></i> Refresh Data
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="xml-data-table" class="transaction-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Nama UKM</th>
+                                    <th>Jenis</th>
+                                    <th>Kategori</th>
+                                    <th>Jumlah</th>
+                                    <th>Keterangan</th>
+                                    <th>Gambar</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="8" class="text-center">Memuat data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -610,6 +970,28 @@ if (isset($_POST['api_url'])) {
 
             // Add event listener for refresh button
             document.getElementById('refresh-transactions').addEventListener('click', loadTransactions);
+
+            // Add event listener for XML Table tab
+            document.querySelector('.tab-button[data-tab="xml-table"]').addEventListener('click', function() {
+                refreshXmlTable();
+            });
+
+            // Add image preview functionality for the transaction form
+            const imageInput = document.getElementById('image');
+            const imagePreview = document.getElementById('image_preview');
+
+            imageInput.addEventListener('input', (e) => {
+                const url = e.target.value;
+                if (url) {
+                    imagePreview.src = url;
+                    imagePreview.style.display = 'block';
+                    imagePreview.onerror = () => {
+                        imagePreview.style.display = 'none';
+                    };
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
         });
 
         async function loadUkms() {
@@ -976,6 +1358,351 @@ if (isset($_POST['api_url'])) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
+        }
+
+        // Add these new functions for XML table functionality
+        async function refreshXmlTable() {
+            const tbody = document.querySelector('#xml-data-table tbody');
+            const refreshBtn = document.querySelector('.table-actions .btn-primary');
+            const originalBtnText = refreshBtn.innerHTML;
+            
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">Memuat data...</td></tr>';
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<div class="loading-spinner"></div> Memuat...';
+
+            try {
+                const response = await fetch('proxy_xml.php');
+                const result = await response.json();
+                
+                if (result.status !== 1) {
+                    throw new Error(result.message || 'Failed to load data');
+                }
+
+                const transactions = result.data;
+                tbody.innerHTML = '';
+
+                if (!transactions || transactions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center">Tidak ada data transaksi</td></tr>';
+                    return;
+                }
+
+                transactions.forEach(transaksi => {
+                    const row = document.createElement('tr');
+                    const jenis = transaksi.jenis;
+                    const jumlah = formatNumber(transaksi.jumlah);
+                    const imageUrl = transaksi.image || '';
+                    
+                    row.innerHTML = `
+                        <td>${formatDate(transaksi.tanggal)}</td>
+                        <td>${transaksi.nama_ukm}</td>
+                        <td class="${jenis}">${jenis === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}</td>
+                        <td>${transaksi.kategori}</td>
+                        <td class="${jenis}">Rp ${jumlah}</td>
+                        <td>${transaksi.keterangan || '-'}</td>
+                        <td>
+                            ${imageUrl ? `
+                                <img src="${imageUrl}" 
+                                     alt="Transaction Image" 
+                                     class="transaction-image"
+                                     onclick="showImagePreview('${imageUrl}')"
+                                     onerror="this.src='assets/images/no-image.png'">
+                            ` : '-'}
+                        </td>
+                        <td>
+                            <button class="btn-edit" onclick="editXmlTransaction(${transaksi.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn-delete" onclick="deleteXmlTransaction(${transaksi.id})">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading data:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center text-danger">
+                            Gagal memuat data: ${error.message}
+                            <br>
+                            <small>Silakan coba refresh halaman atau hubungi administrator.</small>
+                        </td>
+                    </tr>
+                `;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = originalBtnText;
+            }
+        }
+
+        function editXmlTransaction(id) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Edit Transaksi</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-xml-form" enctype="multipart/form-data">
+                            <input type="hidden" id="edit_id" name="id" value="${id}">
+                            <div class="form-group">
+                                <label for="edit_tanggal">Tanggal</label>
+                                <input type="date" id="edit_tanggal" name="tanggal" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_nama_ukm">Nama UKM</label>
+                                <input type="text" id="edit_nama_ukm" name="nama_ukm" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_jenis">Jenis</label>
+                                <select id="edit_jenis" name="jenis" required>
+                                    <option value="pemasukan">Pemasukan</option>
+                                    <option value="pengeluaran">Pengeluaran</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_kategori">Kategori</label>
+                                <input type="text" id="edit_kategori" name="kategori" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_jumlah">Jumlah</label>
+                                <input type="number" id="edit_jumlah" name="jumlah" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit_keterangan">Keterangan</label>
+                                <textarea id="edit_keterangan" name="keterangan"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Gambar</label>
+                                <div class="image-upload-container">
+                                    <div class="image-upload-options">
+                                        <label>
+                                            <input type="radio" name="image_type" value="url" checked> URL Gambar
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="image_type" value="file"> Upload File
+                                        </label>
+                                    </div>
+                                    <div id="url_input_container">
+                                        <input type="url" id="edit_image" name="image" placeholder="https://example.com/image.jpg">
+                                    </div>
+                                    <div id="file_input_container" style="display: none;">
+                                        <input type="file" id="edit_image_file" name="image_file" accept="image/*">
+                                    </div>
+                                    <img id="image_preview" class="image-preview" alt="Preview">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" onclick="closeModal()">Batal</button>
+                        <button class="btn btn-primary" onclick="saveXmlTransaction()">Simpan</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.style.display = 'block';
+
+            // Add event listeners for image type selection
+            const urlRadio = modal.querySelector('input[value="url"]');
+            const fileRadio = modal.querySelector('input[value="file"]');
+            const urlContainer = modal.querySelector('#url_input_container');
+            const fileContainer = modal.querySelector('#file_input_container');
+            const imagePreview = modal.querySelector('#image_preview');
+
+            urlRadio.addEventListener('change', () => {
+                urlContainer.style.display = 'block';
+                fileContainer.style.display = 'none';
+                imagePreview.style.display = 'none';
+            });
+
+            fileRadio.addEventListener('change', () => {
+                urlContainer.style.display = 'none';
+                fileContainer.style.display = 'block';
+                imagePreview.style.display = 'none';
+            });
+
+            // Add event listener for file input
+            const fileInput = modal.querySelector('#edit_image_file');
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Add event listener for URL input
+            const urlInput = modal.querySelector('#edit_image');
+            urlInput.addEventListener('input', (e) => {
+                const url = e.target.value;
+                if (url) {
+                    imagePreview.src = url;
+                    imagePreview.style.display = 'block';
+                    imagePreview.onerror = () => {
+                        imagePreview.style.display = 'none';
+                    };
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+
+            // Fetch transaction data
+            fetch(`get_transaction.php?id=${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 1) {
+                        const transaksi = result.data;
+                        document.getElementById('edit_tanggal').value = transaksi.tanggal;
+                        document.getElementById('edit_nama_ukm').value = transaksi.nama_ukm;
+                        document.getElementById('edit_jenis').value = transaksi.jenis;
+                        document.getElementById('edit_kategori').value = transaksi.kategori;
+                        document.getElementById('edit_jumlah').value = transaksi.jumlah;
+                        document.getElementById('edit_keterangan').value = transaksi.keterangan || '';
+                        
+                        // Handle image display
+                        if (transaksi.image) {
+                            if (transaksi.image.startsWith('data:image') || transaksi.image.startsWith('blob:')) {
+                                // It's a file
+                                fileRadio.checked = true;
+                                urlContainer.style.display = 'none';
+                                fileContainer.style.display = 'block';
+                                imagePreview.src = transaksi.image;
+                                imagePreview.style.display = 'block';
+                            } else {
+                                // It's a URL
+                                urlRadio.checked = true;
+                                urlContainer.style.display = 'block';
+                                fileContainer.style.display = 'none';
+                                document.getElementById('edit_image').value = transaksi.image;
+                                imagePreview.src = transaksi.image;
+                                imagePreview.style.display = 'block';
+                            }
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to load transaction data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading transaction:', error);
+                    showAlert('Gagal memuat data transaksi: ' + error.message, 'error');
+                    closeModal();
+                });
+
+            // Add event listener for close button
+            modal.querySelector('.close-modal').onclick = closeModal;
+        }
+
+        function closeModal() {
+            const modal = document.querySelector('.modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function saveXmlTransaction() {
+            const form = document.getElementById('edit-xml-form');
+            const formData = new FormData(form);
+            
+            // Handle image based on type
+            const imageType = formData.get('image_type');
+            if (imageType === 'file') {
+                const fileInput = document.getElementById('edit_image_file');
+                if (fileInput.files.length > 0) {
+                    formData.delete('image');
+                    formData.append('image', fileInput.files[0]);
+                }
+            } else {
+                formData.delete('image_file');
+            }
+
+            try {
+                const response = await fetch('update_transaction.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 1) {
+                    showAlert('Transaksi berhasil diperbarui', 'success');
+                    closeModal();
+                    refreshXmlTable();
+                } else {
+                    showAlert(result.message || 'Gagal memperbarui transaksi', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating transaction:', error);
+                showAlert('Gagal memperbarui transaksi: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteXmlTransaction(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('delete_transaction.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 1) {
+                    showAlert('Transaksi berhasil dihapus', 'success');
+                    refreshXmlTable();
+                } else {
+                    showAlert(result.message || 'Gagal menghapus transaksi', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting transaction:', error);
+                showAlert('Gagal menghapus transaksi: ' + error.message, 'error');
+            }
+        }
+
+        // Add image preview functionality
+        function showImagePreview(imageUrl) {
+            // Create modal if it doesn't exist
+            let modal = document.querySelector('.image-preview-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.className = 'image-preview-modal';
+                modal.innerHTML = `
+                    <button class="close-preview">&times;</button>
+                    <img src="" alt="Preview">
+                `;
+                document.body.appendChild(modal);
+                
+                // Add click event to close button
+                modal.querySelector('.close-preview').onclick = () => {
+                    modal.style.display = 'none';
+                };
+                
+                // Add click event to close when clicking outside the image
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+            }
+            
+            // Update image source and show modal
+            modal.querySelector('img').src = imageUrl;
+            modal.style.display = 'flex';
         }
     </script>
 </body>
